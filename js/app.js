@@ -211,3 +211,19 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
       </g>
     </g>`;
 })();
+
+/* ---------- Пылинки в свете на главном экране ---------- */
+(function buildMotes() {
+    const box = document.querySelector('.motes');
+    if (!box) return;
+    for (let i = 0; i < 18; i++) {
+        const mote = document.createElement('i');
+        mote.style.cssText =
+            `left:${(Math.random() * 100).toFixed(1)}%;` +
+            `--s:${(2 + Math.random() * 3).toFixed(1)}px;` +
+            `--t:${(14 + Math.random() * 14).toFixed(1)}s;` +
+            `--d:${(-Math.random() * 24).toFixed(1)}s;` +
+            `--dx:${((Math.random() - 0.5) * 120).toFixed(0)}px`;
+        box.appendChild(mote);
+    }
+})();

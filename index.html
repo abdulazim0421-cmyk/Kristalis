@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Кристалис — банный комплекс: парные, парение, массаж, пилинг. Услуги и полный прайс.">
+    <title>Кристалис — банный комплекс</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=Oswald:wght@500;700&family=Roboto:wght@400;500;700&display=swap&subset=cyrillic" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<div class="head" id="head">
+    <div class="topbar">
+        <div class="wrap topbar__inner">
+            <span>Добро пожаловать в банный комплекс Кристалис!</span>
+            <span class="topbar__right"><a href="#prices">Прайс</a><span class="pin">Бишкек</span></span>
+        </div>
+    </div>
+    <header class="header">
+        <div class="wrap header__inner">
+            <nav class="nav" id="nav" aria-label="Основное меню">
+                <a href="#services">Услуги</a>
+                <a href="#prices">Прайс</a>
+            </nav>
+            <a href="#hero" class="logo"><svg viewBox="0 0 40 36" aria-hidden="true"><path d="M2 18 20 3l18 15" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M20 12l6 6-6 12-6-12z" fill="#fff"/></svg><span>Кристалис</span></a>
+            <div class="contacts"><a href="tel:+996000000000" class="contacts__phone">+996 000 000 000</a><small>info@kristalis.kg</small></div>
+            <button class="burger" id="burger" type="button" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+    </header>
+</div>
+
+<main>
+    <section class="hero" id="hero">
+        <div class="steam" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="hanging" aria-hidden="true">
+            <svg id="broom" class="broom" viewBox="0 0 360 500"></svg>
+        </div>
+        <div class="wrap hero__content">
+            <h1 class="hero__title">Банный комплекс Кристалис</h1>
+            <p class="hero__text">Для <b>любителей пара и ценителей отдыха</b>.<br>Парные, парение, массаж и спа-программы в одном месте.</p>
+            <a href="#services" class="btn-outline">Услуги</a>
+        </div>
+    </section>
+
+    <section class="section" id="services">
+        <div class="wrap">
+            <h2 class="title reveal">Услуги и процедуры</h2>
+            <div class="svc-list" id="svc-list"></div>
+        </div>
+    </section>
+
+    <section class="section section--grey" id="prices">
+        <div class="wrap">
+            <h2 class="title reveal">Полный прайс</h2>
+            <p class="lead reveal">Все цены указаны в сомах. Парные — за один час на компанию.</p>
+            <div class="tabs reveal" id="tabs" role="tablist"></div>
+            <div id="price"></div>
+            <p class="note">Цены ориентировочные и могут меняться. Уточняйте актуальный прайс у администратора.</p>
+        </div>
+    </section>
+</main>
+
+<footer class="footer"><div class="wrap"><p>&copy; 2026 Кристалис. Учебный проект, все данные вымышленные.</p></div></footer>
+<button class="to-top" id="to-top" type="button" aria-label="Наверх"><svg viewBox="0 0 24 24"><path d="M12 20V5M5 11l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+<script src="js/app.js"></script>
+</body>
+</html>

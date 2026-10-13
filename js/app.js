@@ -46,7 +46,11 @@ const IMAGES = {
     russian: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1000&q=70',
     finnish: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1000&q=70',
     hammam: 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=70',
-    veniki: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1000&q=70',
+    veniki: 'https://images.unsplash.com/photo-1790776576372-de6b92aa1e5c?auto=format&fit=crop&w=1000&q=70',
+    massage: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1000&q=70',
+    peeling: 'https://images.unsplash.com/photo-1634612831148-03a8550e1d52?auto=format&fit=crop&w=1000&q=70',
+    salt: 'https://images.unsplash.com/photo-1623241923490-5b2fd532828f?auto=format&fit=crop&w=1000&q=70',
+    pool: 'https://images.unsplash.com/photo-1678960591129-ff8db00462e2?auto=format&fit=crop&w=1000&q=70',
 };
 function must(selector) {
     const el = document.querySelector(selector);

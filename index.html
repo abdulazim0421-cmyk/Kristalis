@@ -12,6 +12,34 @@
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="kr-gold" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="120" y2="150">
+            <stop offset="0" stop-color="#c9904a"/>
+            <stop offset="0.35" stop-color="#fff1cf"/>
+            <stop offset="0.65" stop-color="#f0c27a"/>
+            <stop offset="1" stop-color="#c9904a"/>
+        </linearGradient>
+    </defs>
+    <symbol id="kr-logo" viewBox="0 0 120 150">
+        <g fill="none" stroke="url(#kr-gold)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M60 5C66 32 108 62 108 102a48 48 0 0 1-96 0C12 62 54 32 60 5Z" stroke-width="3.6"/>
+            <path d="M60 15C65 38 99 66 99 102a39 39 0 0 1-78 0C21 66 55 38 60 15Z" stroke-width="1.8" opacity="0.7"/>
+            <circle cx="60" cy="102" r="30" stroke-width="1.8" opacity="0.6"/>
+            <path d="M24 80C44 60 78 60 97 84" stroke-width="1.8" opacity="0.55"/>
+            <path d="M60 15C52 50 40 82 31 128" stroke-width="1.6" opacity="0.5"/>
+            <path d="M60 15C68 50 80 82 89 128" stroke-width="1.6" opacity="0.5"/>
+            <path d="M44 78C42 94 40 110 38 126" stroke-width="4.2"/>
+            <path d="M44 78C47 70 58 71 55 80" stroke-width="3.4"/>
+            <path d="M40 106C52 100 62 91 70 78" stroke-width="4"/>
+            <path d="M49 100C57 106 65 114 73 125" stroke-width="4"/>
+            <path d="M66 95C65 109 63 123 60 134" stroke-width="4.2"/>
+            <path d="M66 99C74 90 88 94 86 105C84 115 72 117 64 111" stroke-width="4.2"/>
+            <path d="M28 120C44 133 70 136 92 119" stroke-width="3"/>
+        </g>
+    </symbol>
+</svg>
+
 <div class="head" id="head">
     <div class="topbar">
         <div class="wrap topbar__inner">
@@ -25,7 +53,6 @@
                 <a href="#services" data-i18n="navServices">Услуги</a>
                 <a href="#prices" data-i18n="navPrices">Прайс</a>
             </nav>
-            <a href="#hero" class="logo"><svg viewBox="0 0 40 36" aria-hidden="true"><path d="M2 18 20 3l18 15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M20 12l6 6-6 12-6-12z" fill="currentColor"/></svg><span data-i18n="brand">Кристалис</span></a>
             <div class="header__tools">
                 <div class="lang" role="group" data-i18n-aria="langAria" aria-label="Язык">
                     <button type="button" data-lang="ru">RU</button>
@@ -48,6 +75,7 @@
         <div class="steam" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
         <div class="motes" aria-hidden="true"></div>
         <div class="wrap hero__content">
+            <svg class="hero__logo" viewBox="0 0 120 150" role="img" data-i18n-aria="brand" aria-label="Кристалис"><use href="#kr-logo"/></svg>
             <p class="hero__eyebrow" data-i18n="heroEyebrow">Банный комплекс · Бишкек</p>
             <h1 class="hero__title">
                 <span class="hero__brand" data-i18n="brand">Кристалис</span>

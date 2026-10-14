@@ -18,6 +18,8 @@ const ICONS = {
     nails: '<path d="M32 8l20 14-20 34L12 22z"/><path d="M12 22h40M24 22l8 34 8-34M32 8l-8 14M32 8l8 14"/>',
 };
 
+const MAX_SHOWN = 8;
+
 const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
 const priceText = (item) => `${item[3] ? 'от\u00A0' : ''}${fmt(item[1])}\u00A0сом`;
 const esc = (s) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -29,7 +31,7 @@ const plural = (n, one, few, many) => {
 };
 
 /* ---------- Состояние ---------- */
-const state = { g: 'm', section: null, q: '' };
+const state = { g: 'm', section: null };
 
 /* Разделы и услуги с учётом выбранного пола */
 function view(g) {
@@ -42,26 +44,49 @@ function view(g) {
     }).filter(s => s.groups.length);
 }
 
+/* Что показать в блоке «Что входит»: все услуги, а если их много — по очереди из каждой группы */
+function pickShown(s) {
+    const all = s.groups.flatMap(gr => gr.items);
+    if (all.length <= MAX_SHOWN)
+        return all;
+    const lists = s.groups.map(gr => gr.items.slice());
+    const out = [];
+    while (out.length < MAX_SHOWN) {
+        let added = false;
+        for (const l of lists) {
+            if (l.length && out.length < MAX_SHOWN) {
+                out.push(l.shift());
+                added = true;
+            }
+        }
+        if (!added)
+            break;
+    }
+    return out;
+}
+
 /* ---------- Услуги (карточки) ---------- */
 const list = must('#svc-list');
 
 function renderService(s, i) {
-    const all = s.groups.flatMap(gr => gr.items);
+    const total = s.groups.reduce((n, gr) => n + gr.items.length, 0);
+    const shown = pickShown(s);
+    const rest = total - shown.length;
     const img = s.img && IMAGES[s.img] ? ` style="--img:url('${IMAGES[s.img]}')"` : '';
-    const names = all.slice(0, 8).map(it => `<li>${esc(it[0])}</li>`).join('');
-    const rest = all.length - 8;
+    const names = shown.map(it => `<li>${esc(it[0])}</li>`).join('');
     return `
   <article class="svc reveal${i % 2 ? ' svc--rev' : ''}" id="${s.id}">
     <div class="svc__text">
-      <p class="svc__tag">${all.length} ${plural(all.length, 'услуга', 'услуги', 'услуг')}</p>
+      <p class="svc__tag">${total} ${plural(total, 'услуга', 'услуги', 'услуг')}</p>
       <h3 class="svc__title">${s.title}</h3>
       <p class="svc__lead">${s.text}</p>
-      <button class="svc__btn" type="button" aria-expanded="false" aria-controls="m-${s.id}">Подробнее</button>
-      <div class="svc__more" id="m-${s.id}"><div class="svc__more-inner">
-        <div class="info"><h4>Что входит</h4><ul>${names}</ul>${rest > 0 ? `<p class="info__rest">и ещё ${rest} в прайсе</p>` : ''}</div>
-        ${s.note ? `<div class="info"><h4>Важно</h4><p>${s.note}</p></div>` : ''}
-        <button class="svc__link" type="button" data-go="${s.id}">Весь прайс раздела</button>
-      </div></div>
+      <div class="info">
+        <h4>Что входит</h4>
+        <ul class="info__list">${names}</ul>
+        ${rest > 0 ? `<p class="info__rest">и ещё ${rest} в прайсе</p>` : ''}
+      </div>
+      ${s.note ? `<div class="info"><h4>Важно</h4><p>${s.note}</p></div>` : ''}
+      <button class="svc__link" type="button" data-go="${s.id}">Весь прайс раздела</button>
     </div>
     <div class="svc__img"${img}>
       <svg viewBox="0 0 64 64" aria-hidden="true">${ICONS[s.id] || ''}</svg>
@@ -99,22 +124,10 @@ function renderServices() {
 }
 
 list.addEventListener('click', (e) => {
-    const btn = e.target.closest('.svc__btn');
-    const item = btn?.closest('.svc');
-    if (!btn || !item)
-        return;
-    const open = item.classList.toggle('is-open');
-    btn.setAttribute('aria-expanded', String(open));
-    btn.textContent = open ? 'Скрыть' : 'Подробнее';
-});
-
-list.addEventListener('click', (e) => {
     const go = e.target.closest('[data-go]');
     if (!go)
         return;
     state.section = go.dataset.go;
-    state.q = '';
-    qInput.value = '';
     renderPrices();
     must('#prices').scrollIntoView({ behavior: 'smooth' });
 });
@@ -122,7 +135,6 @@ list.addEventListener('click', (e) => {
 /* ---------- Прайс ---------- */
 const tabs = must('#tabs');
 const price = must('#price');
-const qInput = must('#q');
 
 const rowHtml = (it, i) => `<li style="--d:${Math.min(i, 8) * 40}ms"><span>${esc(it[0])}</span><i></i><b>${priceText(it)}</b></li>`;
 
@@ -134,28 +146,12 @@ function renderPrices() {
     const secs = view(state.g);
     if (!secs.some(s => s.id === state.section))
         state.section = secs[0].id;
-    const q = state.q.trim().toLowerCase();
 
-    tabs.hidden = !!q;
     tabs.innerHTML = secs.map(s =>
         `<button type="button" role="tab" data-k="${s.id}" class="${s.id === state.section ? 'is-active' : ''}" aria-selected="${s.id === state.section}">${s.title}</button>`).join('');
 
-    let html = '';
-    if (q) {
-        for (const s of secs) {
-            const groups = s.groups
-                .map(gr => ({ items: gr.items.filter(it => it[0].toLowerCase().includes(q)) }))
-                .filter(gr => gr.items.length);
-            if (groups.length)
-                html += `<div class="price__card"><h3 class="price__sec">${s.title}</h3>${groups.map(groupHtml).join('')}</div>`;
-        }
-        if (!html)
-            html = '<p class="price__empty">Ничего не найдено. Попробуйте другое слово или выберите раздел без поиска.</p>';
-    } else {
-        const s = secs.find(x => x.id === state.section);
-        html = `<div class="price__card">${s.groups.map(groupHtml).join('')}</div>`;
-    }
-    price.innerHTML = html;
+    const s = secs.find(x => x.id === state.section);
+    price.innerHTML = `<div class="price__card">${s.groups.map(groupHtml).join('')}</div>`;
     swapAnim(price);
 }
 
@@ -165,11 +161,6 @@ tabs.addEventListener('click', (e) => {
         state.section = b.dataset.k;
         renderPrices();
     }
-});
-
-qInput.addEventListener('input', () => {
-    state.q = qInput.value;
-    renderPrices();
 });
 
 /* ---------- Мужской / женский ---------- */

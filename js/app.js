@@ -188,17 +188,49 @@ function renderServices() {
     startSlides();
 }
 
+const tabs = must('#tabs');
+const price = must('#price');
+
+const HEADER_GAP = 80;
+const BOTTOM_GAP = 60;
+
+function priceAnchor() {
+    return must('#prices .title').getBoundingClientRect().top + window.scrollY - HEADER_GAP;
+}
+
+function scrollToPrices() {
+    window.scrollTo({ top: Math.max(0, priceAnchor()), behavior: 'smooth' });
+}
+
+function fitPrices() {
+    const card = price.querySelector('.price__card');
+    if (!card)
+        return;
+    card.classList.remove('is-compact');
+    card.style.columnCount = '';
+    if (window.innerWidth < 700)
+        return;
+    const top = card.getBoundingClientRect().top + window.scrollY;
+    const avail = window.innerHeight - (top - priceAnchor()) - BOTTOM_GAP;
+    const maxCols = window.innerWidth >= 1400 ? 3 : 2;
+    for (const compact of [false, true]) {
+        card.classList.toggle('is-compact', compact);
+        for (let c = 1; c <= maxCols; c++) {
+            card.style.columnCount = c;
+            if (card.offsetHeight <= avail)
+                return;
+        }
+    }
+}
+
 list.addEventListener('click', (e) => {
     const go = e.target.closest('[data-go]');
     if (!go)
         return;
     state.section = go.dataset.go;
     renderPrices();
-    must('#prices').scrollIntoView({ behavior: 'smooth' });
+    scrollToPrices();
 });
-
-const tabs = must('#tabs');
-const price = must('#price');
 
 const rowHtml = (it, i) => `<li style="--d:${Math.min(i, 8) * 40}ms"><span>${esc(nameOf(it))}</span><i></i><b>${priceText(it)}</b></li>`;
 
@@ -217,6 +249,7 @@ function renderPrices() {
     const s = secs.find(x => x.id === state.section);
     price.innerHTML = `<div class="price__card">${s.groups.map(groupHtml).join('')}</div>`;
     swapAnim(price);
+    fitPrices();
 }
 
 tabs.addEventListener('click', (e) => {
@@ -224,6 +257,7 @@ tabs.addEventListener('click', (e) => {
     if (b?.dataset.k) {
         state.section = b.dataset.k;
         renderPrices();
+        scrollToPrices();
     }
 });
 
@@ -276,6 +310,7 @@ document.addEventListener('click', (e) => {
         return;
 
     const inPage = !!el.closest('.gender');
+    const inPrices = !!el.closest('#prices');
     const before = inPage ? el.getBoundingClientRect().top : 0;
 
     setGender(el.dataset.g);
@@ -285,12 +320,26 @@ document.addEventListener('click', (e) => {
         if (delta !== 0)
             window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
     }
+
+    if (inPrices) {
+        fitPrices();
+        scrollToPrices();
+    }
 });
 
 setGender(state.g, false);
 applyStatic();
 renderServices();
 renderPrices();
+
+let resizeTimer = 0;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(fitPrices, 150);
+});
+if (document.fonts && document.fonts.ready)
+    document.fonts.ready.then(fitPrices);
+window.addEventListener('load', fitPrices);
 
 const burger = must('#burger');
 const nav = must('#nav');

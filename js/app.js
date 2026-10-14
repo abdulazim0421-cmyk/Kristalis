@@ -1,5 +1,4 @@
 "use strict";
-/* Данные (SECTIONS, IMAGES) лежат в js/data.js */
 
 function must(selector) {
     const el = document.querySelector(selector);
@@ -20,8 +19,14 @@ const ICONS = {
 
 const MAX_SHOWN = 8;
 
+let lang = 'ru';
+const state = { g: 'm', section: null };
+
+const t = (key) => UI[lang][key];
+const tr = (obj) => obj[lang] || obj.ru;
+const nameOf = (it) => (lang === 'en' ? it[4] : lang === 'ky' ? it[5] : it[0]);
+
 const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
-const priceText = (item) => `${item[3] ? 'от\u00A0' : ''}${fmt(item[1])}\u00A0сом`;
 const esc = (s) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const plural = (n, one, few, many) => {
     const m10 = n % 10, m100 = n % 100;
@@ -30,21 +35,39 @@ const plural = (n, one, few, many) => {
     return many;
 };
 
-/* ---------- Состояние ---------- */
-const state = { g: 'm', section: null };
+function priceText(item) {
+    const n = fmt(item[1]);
+    if (lang === 'ky')
+        return `${n}\u00A0${item[3] ? 'сомдон' : 'сом'}`;
+    if (lang === 'en')
+        return `${item[3] ? 'from\u00A0' : ''}${n}\u00A0som`;
+    return `${item[3] ? 'от\u00A0' : ''}${n}\u00A0сом`;
+}
 
-/* Разделы и услуги с учётом выбранного пола */
+function countText(n) {
+    if (lang === 'en')
+        return `${n} ${n === 1 ? 'service' : 'services'}`;
+    if (lang === 'ky')
+        return `${n} кызмат`;
+    return `${n} ${plural(n, 'услуга', 'услуги', 'услуг')}`;
+}
+
 function view(g) {
+    const male = g === 'm';
     return SECTIONS.map(s => {
         const groups = s.groups
-            .map(gr => ({ title: gr.title, items: gr.items.filter(it => it[2].includes(g)) }))
+            .map(gr => ({ title: gr.title ? tr(gr.title) : '', items: gr.items.filter(it => it[2].includes(g)) }))
             .filter(gr => gr.items.length);
-        return { ...s, groups, title: g === 'm' && s.titleM ? s.titleM : s.title,
-            text: g === 'm' && s.textM ? s.textM : s.text };
+        return {
+            id: s.id,
+            groups,
+            title: tr(male && s.titleM ? s.titleM : s.title),
+            text: tr(male && s.textM ? s.textM : s.text),
+            note: s.note ? tr(s.note) : '',
+        };
     }).filter(s => s.groups.length);
 }
 
-/* Что показать в блоке «Что входит»: все услуги, а если их много — по очереди из каждой группы */
 function pickShown(s) {
     const all = s.groups.flatMap(gr => gr.items);
     if (all.length <= MAX_SHOWN)
@@ -65,37 +88,78 @@ function pickShown(s) {
     return out;
 }
 
-/* ---------- Услуги (карточки) ---------- */
 const list = must('#svc-list');
 
 function renderService(s, i) {
     const total = s.groups.reduce((n, gr) => n + gr.items.length, 0);
     const shown = pickShown(s);
     const rest = total - shown.length;
-    const img = s.img && IMAGES[s.img] ? ` style="--img:url('${IMAGES[s.img]}')"` : '';
-    const names = shown.map(it => `<li>${esc(it[0])}</li>`).join('');
+    const names = shown.map(it => `<li>${esc(nameOf(it))}</li>`).join('');
     return `
   <article class="svc reveal${i % 2 ? ' svc--rev' : ''}" id="${s.id}">
     <div class="svc__text">
-      <p class="svc__tag">${total} ${plural(total, 'услуга', 'услуги', 'услуг')}</p>
+      <p class="svc__tag">${countText(total)}</p>
       <h3 class="svc__title">${s.title}</h3>
       <p class="svc__lead">${s.text}</p>
       <div class="info">
-        <h4>Что входит</h4>
+        <h4>${t('included')}</h4>
         <ul class="info__list">${names}</ul>
-        ${rest > 0 ? `<p class="info__rest">и ещё ${rest} в прайсе</p>` : ''}
+        ${rest > 0 ? `<p class="info__rest">${t('more').replace('{n}', rest)}</p>` : ''}
       </div>
-      ${s.note ? `<div class="info"><h4>Важно</h4><p>${s.note}</p></div>` : ''}
-      <button class="svc__link" type="button" data-go="${s.id}">Весь прайс раздела</button>
+      ${s.note ? `<div class="info"><h4>${t('important')}</h4><p>${s.note}</p></div>` : ''}
+      <button class="svc__link" type="button" data-go="${s.id}">${t('fullPrice')}</button>
     </div>
-    <div class="svc__img"${img}>
+    <div class="svc__img" data-id="${s.id}">
       <svg viewBox="0 0 64 64" aria-hidden="true">${ICONS[s.id] || ''}</svg>
-      <span>0${i + 1}</span>
+      <div class="svc__slides"></div>
     </div>
   </article>`;
 }
 
-/* ---------- Появление при прокрутке ---------- */
+const photoCache = new Map();
+const slideTimers = [];
+
+function probe(url) {
+    if (!photoCache.has(url)) {
+        photoCache.set(url, new Promise(resolve => {
+            const im = new Image();
+            im.onload = () => resolve(url);
+            im.onerror = () => resolve(null);
+            im.src = url;
+        }));
+    }
+    return photoCache.get(url);
+}
+
+function startSlides() {
+    slideTimers.splice(0).forEach(clearInterval);
+    list.querySelectorAll('.svc__img').forEach((card, i) => {
+        const urls = PHOTOS[card.dataset.id] || [];
+        Promise.all(urls.map(probe)).then(all => {
+            const ok = all.filter(Boolean);
+            if (!ok.length || !card.isConnected)
+                return;
+            const box = card.querySelector('.svc__slides');
+            ok.forEach(url => {
+                const d = document.createElement('div');
+                d.className = 'slide';
+                d.style.backgroundImage = `url("${url}")`;
+                box.appendChild(d);
+            });
+            const slides = box.children;
+            slides[0].classList.add('is-on');
+            if (slides.length < 2)
+                return;
+            let n = 0;
+            slideTimers.push(setInterval(() => {
+                slides[n].classList.remove('is-on');
+                n = (n + 1) % slides.length;
+                slides[n].classList.add('is-on');
+            }, 6000 + (i % 4) * 1000));
+        });
+    });
+}
+
 const io = new IntersectionObserver(entries => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -121,6 +185,7 @@ function renderServices() {
         swapAnim(list);
     }
     firstRender = false;
+    startSlides();
 }
 
 list.addEventListener('click', (e) => {
@@ -132,11 +197,10 @@ list.addEventListener('click', (e) => {
     must('#prices').scrollIntoView({ behavior: 'smooth' });
 });
 
-/* ---------- Прайс ---------- */
 const tabs = must('#tabs');
 const price = must('#price');
 
-const rowHtml = (it, i) => `<li style="--d:${Math.min(i, 8) * 40}ms"><span>${esc(it[0])}</span><i></i><b>${priceText(it)}</b></li>`;
+const rowHtml = (it, i) => `<li style="--d:${Math.min(i, 8) * 40}ms"><span>${esc(nameOf(it))}</span><i></i><b>${priceText(it)}</b></li>`;
 
 function groupHtml(gr) {
     return `${gr.title ? `<h4 class="price__group">${gr.title}</h4>` : ''}<ul class="price__list">${gr.items.map(rowHtml).join('')}</ul>`;
@@ -163,7 +227,36 @@ tabs.addEventListener('click', (e) => {
     }
 });
 
-/* ---------- Мужской / женский ---------- */
+function applyStatic() {
+    document.documentElement.lang = lang;
+    document.title = t('docTitle');
+    must('meta[name="description"]').setAttribute('content', t('metaDesc'));
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+        el.setAttribute('aria-label', t(el.dataset.i18nAria));
+    });
+    document.querySelectorAll('[data-lang]').forEach(b => {
+        b.classList.toggle('is-active', b.dataset.lang === lang);
+    });
+}
+
+function setLang(l) {
+    if (l === lang)
+        return;
+    lang = l;
+    applyStatic();
+    renderServices();
+    renderPrices();
+}
+
+document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-lang]');
+    if (b)
+        setLang(b.dataset.lang);
+});
+
 function setGender(g, rerender = true) {
     state.g = g;
     document.querySelectorAll('.gender button').forEach(b => {
@@ -182,9 +275,6 @@ document.addEventListener('click', (e) => {
     if (!el || el.dataset.g === state.g)
         return;
 
-    /* Переключатель внутри страницы (не кнопки на главном экране):
-       после перерисовки карточек высота страницы меняется — возвращаем кнопку на то же место экрана,
-       чтобы страницу не уводило вверх. */
     const inPage = !!el.closest('.gender');
     const before = inPage ? el.getBoundingClientRect().top : 0;
 
@@ -198,10 +288,10 @@ document.addEventListener('click', (e) => {
 });
 
 setGender(state.g, false);
+applyStatic();
 renderServices();
 renderPrices();
 
-/* ---------- Шапка, меню, кнопка вверх ---------- */
 const burger = must('#burger');
 const nav = must('#nav');
 const head = must('#head');
@@ -231,7 +321,6 @@ document.querySelectorAll('.reveal').forEach(el => {
         io.observe(el);
 });
 
-/* ---------- Пылинки в тёплом свете на главном экране ---------- */
 (function buildMotes() {
     const box = document.querySelector('.motes');
     if (!box) return;

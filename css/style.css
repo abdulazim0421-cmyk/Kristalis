@@ -243,7 +243,12 @@ button {
     }
 }
 
-.hero__content { position: relative; z-index: 2; }
+.hero__content {
+    --logo-h: clamp(110px, 13vw, 200px);
+    position: relative;
+    z-index: 2;
+    padding-top: calc(var(--logo-h) + 28px);
+}
 
 .hero__content > * {
     opacity: 0;
@@ -256,10 +261,15 @@ button {
 .hero__content > :nth-child(5) { animation-delay: 0.8s; }
 
 .hero__logo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin-inline: auto;
     display: block;
+    height: var(--logo-h);
     width: auto;
-    height: clamp(96px, 15vh, 160px);
-    margin: 0 auto 22px;
+    aspect-ratio: 120 / 150;
     overflow: visible;
     filter: drop-shadow(0 6px 24px rgba(14, 8, 4, 0.7)) drop-shadow(0 0 22px rgba(240, 194, 122, 0.22));
 }
@@ -269,7 +279,6 @@ button {
     align-items: center;
     justify-content: center;
     gap: 18px;
-    margin-top: 86px;
     margin-bottom: 22px;
     color: var(--amber);
     font-size: clamp(12px, 1.4vw, 16px);
@@ -367,10 +376,13 @@ button {
     padding: 18px 56px;
     border: 1px solid rgba(240, 194, 122, 0.55);
     border-radius: 999px;
-    background: rgba(14, 8, 4, 0.88);
+    background: rgba(255, 255, 255, 0.07);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     color: var(--cream);
     font-size: 17px;
     font-weight: 500;
+    text-shadow: 0 1px 10px rgba(14, 8, 4, 0.6);
     cursor: pointer;
     box-shadow: 0 0 30px rgba(240, 194, 122, 0.12);
     transition: background 0.3s, color 0.3s, border-color 0.3s;
@@ -378,8 +390,8 @@ button {
 
 .pill:hover {
     border-color: var(--cream);
-    background: var(--cream);
-    color: var(--night);
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
 }
 
 .motes {

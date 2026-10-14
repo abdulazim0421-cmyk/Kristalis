@@ -218,26 +218,19 @@ button {
     animation: zoom 30s ease-in-out infinite alternate;
 }
 
-/* Вертикальный экран (моноблок-стенд): фото целиком по ширине, без сильного увеличения.
-   За ним размытая подложка из того же фото, сверху и снизу плавный переход в тёмный фон. */
+/* Вертикальный экран (моноблок-стенд): фото на весь экран, без анимации приближения.
+   Если положите вертикальное фото img/hero-portrait.jpg, оно подхватится само,
+   пока его нет, используется обычное hero.jpg. */
 @media (orientation: portrait) {
     .hero::before {
         background:
-                linear-gradient(rgba(14, 8, 4, 0.55), rgba(14, 8, 4, 0.55)),
-                url('../img/hero.jpg') center / cover no-repeat;
-        filter: blur(28px);
-        transform: scale(1.15);
+                radial-gradient(ellipse 65% 30% at 50% 50%, rgba(14, 8, 4, 0.45), rgba(14, 8, 4, 0) 75%),
+                linear-gradient(rgba(14, 8, 4, 0.55), rgba(14, 8, 4, 0.05) 22%, rgba(14, 8, 4, 0.1) 72%, var(--night) 100%),
+                url('../img/hero-portrait.jpg') center / cover no-repeat,
+                url('../img/hero.jpg') 50% 50% / cover no-repeat;
+        filter: none;
+        transform: none;
         animation: none;
-    }
-
-    .hero::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background:
-                linear-gradient(var(--night) 0, rgba(18, 10, 5, 0) 24%, rgba(18, 10, 5, 0) 76%, var(--night) 100%),
-                radial-gradient(ellipse 60% 40% at 50% 50%, rgba(14, 8, 4, 0.45), rgba(14, 8, 4, 0) 75%),
-                url('../img/hero.jpg') center / 100% auto no-repeat;
     }
 }
 

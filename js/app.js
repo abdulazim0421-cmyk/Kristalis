@@ -179,8 +179,22 @@ function setGender(g, rerender = true) {
 
 document.addEventListener('click', (e) => {
     const el = e.target.closest('[data-g]');
-    if (el && el.dataset.g !== state.g)
-        setGender(el.dataset.g);
+    if (!el || el.dataset.g === state.g)
+        return;
+
+    /* Переключатель внутри страницы (не кнопки на главном экране):
+       после перерисовки карточек высота страницы меняется — возвращаем кнопку на то же место экрана,
+       чтобы страницу не уводило вверх. */
+    const inPage = !!el.closest('.gender');
+    const before = inPage ? el.getBoundingClientRect().top : 0;
+
+    setGender(el.dataset.g);
+
+    if (inPage) {
+        const delta = el.getBoundingClientRect().top - before;
+        if (delta !== 0)
+            window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
+    }
 });
 
 setGender(state.g, false);

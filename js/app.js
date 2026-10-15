@@ -20,7 +20,7 @@ const ICONS = {
 const MAX_SHOWN = 8;
 
 let lang = 'ru';
-const state = { g: 'm', section: null };
+const state = { g: 'm', section: null, group: null };
 
 const t = (key) => UI[lang][key];
 const tr = (obj) => obj[lang] || obj.ru;
@@ -191,18 +191,41 @@ function renderServices() {
     startSlides();
 }
 
+/* ---------- Прайс: фильтр слева, цены справа ---------- */
+
 const tabs = must('#tabs');
 const price = must('#price');
 
-const HEADER_GAP = 80;
-const GROUP_GAP = 110;
+// Оборачиваем фильтр и прайс в двухколоночный блок (HTML менять не нужно)
+const pl = document.createElement('div');
+pl.className = 'pl';
+tabs.parentNode.insertBefore(pl, tabs);
+tabs.className = 'pside';
+tabs.removeAttribute('role');
+pl.append(tabs, price);
+price.classList.add('pmain');
 
-function priceAnchor() {
-    return must('#prices .title').getBoundingClientRect().top + window.scrollY - HEADER_GAP;
-}
+const HEADER_GAP = 90;
+const MOBILE = 900;
+let panelOpen = false;
+
+const FT = {
+    ru: { filter: 'Фильтр', sections: 'Раздел', services: 'Услуги', extra: 'Кухня, бар, магазин', all: 'Все категории' },
+    ky: { filter: 'Чыпка', sections: 'Бөлүм', services: 'Кызматтар', extra: 'Ашкана, бар, дүкөн', all: 'Бардык категориялар' },
+    en: { filter: 'Filter', sections: 'Section', services: 'Services', extra: 'Kitchen, bar, shop', all: 'All categories' },
+};
+const ft = (k) => FT[lang][k];
 
 function scrollToPrices() {
-    window.scrollTo({ top: Math.max(0, priceAnchor()), behavior: 'smooth' });
+    const top = must('#prices .title').getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+}
+
+// если верх прайса ушёл выше экрана, подтягиваем к нему
+function keepInView() {
+    const top = pl.getBoundingClientRect().top;
+    if (top < HEADER_GAP - 20)
+        window.scrollTo({ top: Math.max(0, top + window.scrollY - HEADER_GAP), behavior: 'smooth' });
 }
 
 function fitPrices() {
@@ -213,7 +236,7 @@ function fitPrices() {
     card.style.columnCount = '';
     if (card.dataset.big) {
         card.classList.add('is-compact');
-        if (window.innerWidth >= 700)
+        if (window.innerWidth >= 1280)
             card.style.columnCount = 2;
     }
 }
@@ -223,76 +246,103 @@ list.addEventListener('click', (e) => {
     if (!go)
         return;
     state.section = go.dataset.go;
+    state.group = null;
     renderPrices();
     scrollToPrices();
 });
 
 const rowHtml = (it, i) => `<li style="--d:${Math.min(i, 8) * 40}ms"><span>${esc(nameOf(it))}</span><i></i><b>${priceText(it)}</b></li>`;
 
-function groupHtml(gr, i) {
-    return `${gr.title ? `<h4 class="price__group" id="pg-${i}">${gr.title}</h4>` : ''}<ul class="price__list">${gr.items.map(rowHtml).join('')}</ul>`;
+function groupHtml(gr) {
+    return `${gr.title ? `<h4 class="price__group">${gr.title}</h4>` : ''}<ul class="price__list">${gr.items.map(rowHtml).join('')}</ul>`;
 }
 
-function renderPrices() {
+const ICON_FILTER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+function opt(attr, val, text, on, cls = '') {
+    return `<button type="button" class="fopt${on ? ' is-on' : ''}${cls ? ' ' + cls : ''}" ${attr}="${val}"><span class="fopt__mark"></span><span>${text}</span></button>`;
+}
+
+function renderSide(secs, cur) {
+    const sec = (s) => {
+        const on = s.id === cur.id;
+        let html = opt('data-fsec', s.id, s.title, on);
+        if (on && s.priceOnly && s.groups.length > 1) {
+            html += `<div class="fcats">`
+                + opt('data-fgrp', '', ft('all'), state.group === null, 'fopt--sub')
+                + s.groups.map((gr, i) => opt('data-fgrp', i, gr.title, state.group === i, 'fopt--sub')).join('')
+                + `</div>`;
+        }
+        return html;
+    };
+
+    const main = secs.filter(s => !s.priceOnly);
+    const extra = secs.filter(s => s.priceOnly);
+
+    tabs.innerHTML =
+        `<button type="button" class="pside__toggle${panelOpen ? ' is-open' : ''}" data-ftoggle aria-expanded="${panelOpen}">`
+        + `${ICON_FILTER}<span>${ft('filter')}: ${cur.title}</span><i class="pside__arrow"></i></button>`
+        + `<div class="pside__panel${panelOpen ? ' is-open' : ''}">`
+        + (main.length ? `<p class="fsub">${ft('services')}</p>${main.map(sec).join('')}` : '')
+        + (extra.length ? `<p class="fsub">${ft('extra')}</p>${extra.map(sec).join('')}` : '')
+        + `</div>`;
+}
+
+tabs.addEventListener('click', (e) => {
+    if (e.target.closest('[data-ftoggle]')) {
+        panelOpen = !panelOpen;
+        return renderPrices(true);
+    }
+
+    const sec = e.target.closest('[data-fsec]');
+    if (sec) {
+        if (sec.dataset.fsec === state.section && state.group === null)
+            return;
+        const next = view(state.g).find(s => s.id === sec.dataset.fsec);
+        state.section = sec.dataset.fsec;
+        state.group = null;
+        // на телефоне: у раздела без категорий сразу закрываем панель
+        if (window.innerWidth < MAX_MOBILE() && !(next && next.priceOnly && next.groups.length > 1))
+            panelOpen = false;
+        renderPrices();
+        keepInView();
+        return;
+    }
+
+    const grp = e.target.closest('[data-fgrp]');
+    if (grp) {
+        state.group = grp.dataset.fgrp === '' ? null : Number(grp.dataset.fgrp);
+        if (window.innerWidth < MAX_MOBILE())
+            panelOpen = false;
+        renderPrices();
+        keepInView();
+    }
+});
+
+function MAX_MOBILE() { return MOBILE; }
+
+function renderPrices(keepAnim) {
     const secs = view(state.g);
-    if (!secs.some(s => s.id === state.section))
+    if (!secs.some(s => s.id === state.section)) {
         state.section = secs[0].id;
-
-    const extraAt = secs.findIndex(s => s.priceOnly);
-    tabs.innerHTML = secs.map((s, i) => {
-        const cls = [s.id === state.section ? 'is-active' : '', s.priceOnly ? 'is-extra' : ''].filter(Boolean).join(' ');
-        const gap = i === extraAt && i > 0 ? '<span class="tabs__break" aria-hidden="true"></span>' : '';
-        return `${gap}<button type="button" role="tab" data-k="${s.id}" class="${cls}" aria-selected="${s.id === state.section}">${s.title}</button>`;
-    }).join('');
-
+        state.group = null;
+    }
     const s = secs.find(x => x.id === state.section);
-    const subnav = s.priceOnly && s.groups.length > 1
-        ? `<div class="subnav">${s.groups.map((gr, i) => `<button type="button" data-grp="${i}">${gr.title}</button>`).join('')}</div>`
-        : '';
-    clearFlash();
-    price.innerHTML = `${subnav}<div class="price__card"${s.priceOnly ? ' data-big="1"' : ''}>${s.groups.map(groupHtml).join('')}</div>`;
+    if (state.group !== null && !s.groups[state.group])
+        state.group = null;
+
+    renderSide(secs, s);
+    if (keepAnim === true)
+        return;
+
+    const groups = state.group === null ? s.groups : [s.groups[state.group]];
+    const big = s.priceOnly && groups.length > 1;
+    price.innerHTML = `<div class="price__card"${big ? ' data-big="1"' : ''}>${groups.map(groupHtml).join('')}</div>`;
     swapAnim(price);
     fitPrices();
 }
 
-tabs.addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (b?.dataset.k) {
-        state.section = b.dataset.k;
-        renderPrices();
-        scrollToPrices();
-    }
-});
-
-let flashTimer = 0;
-
-function clearFlash() {
-    clearTimeout(flashTimer);
-    price.querySelectorAll('.is-flash').forEach(x => x.classList.remove('is-flash'));
-}
-
-price.addEventListener('animationend', (e) => {
-    if (e.target.classList.contains('is-flash'))
-        e.target.classList.remove('is-flash');
-});
-
-price.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-grp]');
-    if (!b)
-        return;
-    const head = price.querySelector(`#pg-${b.dataset.grp}`);
-    if (!head)
-        return;
-    price.querySelectorAll('.subnav button').forEach(x => x.classList.toggle('is-on', x === b));
-    window.scrollTo({ top: head.getBoundingClientRect().top + window.scrollY - GROUP_GAP, behavior: 'smooth' });
-    clearFlash();
-    void head.offsetWidth;
-    head.classList.add('is-flash');
-    const rows = head.nextElementSibling;
-    if (rows)
-        rows.classList.add('is-flash');
-    flashTimer = setTimeout(clearFlash, 2500);
-});
+/* ---------- Язык, пол, меню ---------- */
 
 function applyStatic() {
     document.documentElement.lang = lang;
@@ -326,6 +376,7 @@ document.addEventListener('click', (e) => {
 
 function setGender(g, rerender = true) {
     state.g = g;
+    state.group = null;
     document.querySelectorAll('.gender button').forEach(b => {
         const on = b.dataset.g === g;
         b.classList.toggle('is-active', on);

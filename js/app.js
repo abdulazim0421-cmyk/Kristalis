@@ -24,7 +24,7 @@ const state = { g: 'm', section: null };
 
 const t = (key) => UI[lang][key];
 const tr = (obj) => obj[lang] || obj.ru;
-const nameOf = (it) => (lang === 'en' ? it[4] : lang === 'ky' ? it[5] : it[0]);
+const nameOf = (it) => (lang === 'en' ? it[4] || it[0] : lang === 'ky' ? it[5] || it[0] : it[0]);
 
 const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
 const esc = (s) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -58,11 +58,13 @@ function view(g) {
         const groups = s.groups
             .map(gr => ({ title: gr.title ? tr(gr.title) : '', items: gr.items.filter(it => it[2].includes(g)) }))
             .filter(gr => gr.items.length);
+        const text = male && s.textM ? s.textM : s.text;
         return {
             id: s.id,
+            priceOnly: !!s.priceOnly,
             groups,
             title: tr(male && s.titleM ? s.titleM : s.title),
-            text: tr(male && s.textM ? s.textM : s.text),
+            text: text ? tr(text) : '',
             note: s.note ? tr(s.note) : '',
         };
     }).filter(s => s.groups.length);
@@ -177,7 +179,7 @@ function swapAnim(el) {
 
 let firstRender = true;
 function renderServices() {
-    list.innerHTML = view(state.g).map(renderService).join('');
+    list.innerHTML = view(state.g).filter(s => !s.priceOnly).map(renderService).join('');
     if (firstRender) {
         list.querySelectorAll('.reveal').forEach(el => io.observe(el));
     } else {
@@ -192,7 +194,7 @@ const tabs = must('#tabs');
 const price = must('#price');
 
 const HEADER_GAP = 80;
-const BOTTOM_GAP = 60;
+const GROUP_GAP = 100;
 
 function priceAnchor() {
     return must('#prices .title').getBoundingClientRect().top + window.scrollY - HEADER_GAP;
@@ -208,18 +210,10 @@ function fitPrices() {
         return;
     card.classList.remove('is-compact');
     card.style.columnCount = '';
-    if (window.innerWidth < 700)
-        return;
-    const top = card.getBoundingClientRect().top + window.scrollY;
-    const avail = window.innerHeight - (top - priceAnchor()) - BOTTOM_GAP;
-    const maxCols = window.innerWidth >= 1400 ? 3 : 2;
-    for (const compact of [false, true]) {
-        card.classList.toggle('is-compact', compact);
-        for (let c = 1; c <= maxCols; c++) {
-            card.style.columnCount = c;
-            if (card.offsetHeight <= avail)
-                return;
-        }
+    if (card.dataset.big) {
+        card.classList.add('is-compact');
+        if (window.innerWidth >= 700)
+            card.style.columnCount = 2;
     }
 }
 
@@ -234,8 +228,8 @@ list.addEventListener('click', (e) => {
 
 const rowHtml = (it, i) => `<li style="--d:${Math.min(i, 8) * 40}ms"><span>${esc(nameOf(it))}</span><i></i><b>${priceText(it)}</b></li>`;
 
-function groupHtml(gr) {
-    return `${gr.title ? `<h4 class="price__group">${gr.title}</h4>` : ''}<ul class="price__list">${gr.items.map(rowHtml).join('')}</ul>`;
+function groupHtml(gr, i) {
+    return `${gr.title ? `<h4 class="price__group" id="pg-${i}">${gr.title}</h4>` : ''}<ul class="price__list">${gr.items.map(rowHtml).join('')}</ul>`;
 }
 
 function renderPrices() {
@@ -243,11 +237,18 @@ function renderPrices() {
     if (!secs.some(s => s.id === state.section))
         state.section = secs[0].id;
 
-    tabs.innerHTML = secs.map(s =>
-        `<button type="button" role="tab" data-k="${s.id}" class="${s.id === state.section ? 'is-active' : ''}" aria-selected="${s.id === state.section}">${s.title}</button>`).join('');
+    const extraAt = secs.findIndex(s => s.priceOnly);
+    tabs.innerHTML = secs.map((s, i) => {
+        const cls = [s.id === state.section ? 'is-active' : '', s.priceOnly ? 'is-extra' : ''].filter(Boolean).join(' ');
+        const gap = i === extraAt && i > 0 ? '<span class="tabs__break" aria-hidden="true"></span>' : '';
+        return `${gap}<button type="button" role="tab" data-k="${s.id}" class="${cls}" aria-selected="${s.id === state.section}">${s.title}</button>`;
+    }).join('');
 
     const s = secs.find(x => x.id === state.section);
-    price.innerHTML = `<div class="price__card">${s.groups.map(groupHtml).join('')}</div>`;
+    const subnav = s.priceOnly && s.groups.length > 1
+        ? `<div class="subnav">${s.groups.map((gr, i) => `<button type="button" data-grp="${i}">${gr.title}</button>`).join('')}</div>`
+        : '';
+    price.innerHTML = `${subnav}<div class="price__card"${s.priceOnly ? ' data-big="1"' : ''}>${s.groups.map(groupHtml).join('')}</div>`;
     swapAnim(price);
     fitPrices();
 }
@@ -259,6 +260,15 @@ tabs.addEventListener('click', (e) => {
         renderPrices();
         scrollToPrices();
     }
+});
+
+price.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-grp]');
+    if (!b)
+        return;
+    const el = price.querySelector(`#pg-${b.dataset.grp}`);
+    if (el)
+        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - GROUP_GAP, behavior: 'smooth' });
 });
 
 function applyStatic() {
@@ -298,9 +308,6 @@ function setGender(g, rerender = true) {
         b.classList.toggle('is-active', on);
         b.setAttribute('aria-selected', String(on));
     });
-    document.querySelectorAll('.hero__actions').forEach(box => {
-        box.dataset.active = g;
-    });
     if (rerender) {
         renderServices();
         renderPrices();
@@ -309,21 +316,7 @@ function setGender(g, rerender = true) {
 
 document.addEventListener('click', (e) => {
     const el = e.target.closest('[data-g]');
-    if (!el)
-        return;
-
-    if (el.closest('.hero__actions')) {
-        e.preventDefault();
-        const same = el.dataset.g === state.g;
-        if (!same)
-            setGender(el.dataset.g);
-        setTimeout(() => {
-            must('#services').scrollIntoView({ behavior: 'smooth' });
-        }, same ? 120 : 430);
-        return;
-    }
-
-    if (el.dataset.g === state.g)
+    if (!el || el.dataset.g === state.g)
         return;
 
     const inPage = !!el.closest('.gender');

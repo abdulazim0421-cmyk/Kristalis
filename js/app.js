@@ -208,9 +208,9 @@ const TWO_COLS_MIN = 560;
 let panelOpen = false;
 
 const FT = {
-    ru: { filter: 'Фильтр', sections: 'Раздел', services: 'Услуги', extra: 'Кухня, бар, магазин', all: 'Все категории' },
-    ky: { filter: 'Чыпка', sections: 'Бөлүм', services: 'Кызматтар', extra: 'Ашкана, бар, дүкөн', all: 'Бардык категориялар' },
-    en: { filter: 'Filter', sections: 'Section', services: 'Services', extra: 'Kitchen, bar, shop', all: 'All categories' },
+    ru: { filter: 'Фильтр', sections: 'Раздел', services: 'Услуги', extra: 'Кухня, бар', shop: 'Магазин', all: 'Все категории' },
+    ky: { filter: 'Чыпка', sections: 'Бөлүм', services: 'Кызматтар', extra: 'Ашкана, бар', shop: 'Дүкөн', all: 'Бардык категориялар' },
+    en: { filter: 'Filter', sections: 'Section', services: 'Services', extra: 'Kitchen, bar', shop: 'Shop', all: 'All categories' },
 };
 const ft = (k) => FT[lang][k];
 
@@ -271,7 +271,8 @@ function renderSide(secs, cur) {
     };
 
     const main = secs.filter(s => !s.priceOnly);
-    const extra = secs.filter(s => s.priceOnly);
+    const extra = secs.filter(s => s.priceOnly && s.id !== 'shop');
+    const shop = secs.filter(s => s.id === 'shop');
 
     tabs.innerHTML =
         `<button type="button" class="pside__toggle${panelOpen ? ' is-open' : ''}" data-ftoggle aria-expanded="${panelOpen}">`
@@ -279,6 +280,7 @@ function renderSide(secs, cur) {
         + `<div class="pside__panel${panelOpen ? ' is-open' : ''}">`
         + (main.length ? `<p class="fsub">${ft('services')}</p>${main.map(sec).join('')}` : '')
         + (extra.length ? `<p class="fsub">${ft('extra')}</p>${extra.map(sec).join('')}` : '')
+        + (shop.length ? `<p class="fsub">${ft('shop')}</p>${shop.map(sec).join('')}` : '')
         + `</div>`;
 }
 
@@ -336,6 +338,20 @@ function splitCols(groups) {
     return [groups.slice(0, best), groups.slice(best)];
 }
 
+let unlockTimer = 0;
+
+function lockHeight() {
+    clearTimeout(unlockTimer);
+    pl.style.minHeight = pl.offsetHeight + 'px';
+}
+
+function unlockHeightLater() {
+    clearTimeout(unlockTimer);
+    unlockTimer = setTimeout(() => {
+        pl.style.minHeight = '';
+    }, 800);
+}
+
 function renderPrices(keepAnim) {
     const secs = view(state.g);
     if (!secs.some(s => s.id === state.section)) {
@@ -345,6 +361,9 @@ function renderPrices(keepAnim) {
     const s = secs.find(x => x.id === state.section);
     if (state.group !== null && !s.groups[state.group])
         state.group = null;
+
+    if (keepAnim !== true)
+        lockHeight();
 
     renderSide(secs, s);
     if (keepAnim === true)
@@ -363,6 +382,7 @@ function renderPrices(keepAnim) {
     price.innerHTML = `<div class="price__card"${big ? ' data-big="1"' : ''}>${body}</div>`;
     swapAnim(price);
     fitPrices();
+    unlockHeightLater();
 }
 
 function applyStatic() {

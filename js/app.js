@@ -273,6 +273,7 @@ function renderSide(secs, cur) {
     const main = secs.filter(s => !s.priceOnly);
     const extra = secs.filter(s => s.priceOnly && s.id !== 'shop');
     const shop = secs.filter(s => s.id === 'shop');
+    const keep = tabs.scrollTop;
 
     tabs.innerHTML =
         `<button type="button" class="pside__toggle${panelOpen ? ' is-open' : ''}" data-ftoggle aria-expanded="${panelOpen}">`
@@ -282,6 +283,8 @@ function renderSide(secs, cur) {
         + (extra.length ? `<p class="fsub">${ft('extra')}</p>${extra.map(sec).join('')}` : '')
         + (shop.length ? `<p class="fsub">${ft('shop')}</p>${shop.map(sec).join('')}` : '')
         + `</div>`;
+
+    tabs.scrollTop = keep;
 }
 
 tabs.addEventListener('click', (e) => {

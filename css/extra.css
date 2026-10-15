@@ -11,14 +11,29 @@
     position: sticky;
     top: 90px;
     max-height: calc(100vh - 110px);
+    max-height: calc(100dvh - 110px);
+    overflow-x: hidden;
     overflow-y: auto;
     padding: 10px 22px 18px;
     border-radius: var(--radius);
     background: #fff;
     box-shadow: 0 14px 40px rgba(60, 30, 10, 0.08);
     overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(42, 26, 15, 0.25) transparent;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.pside::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.pside::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: rgba(168, 105, 42, 0.5);
 }
 
 .pside__toggle { display: none; }
@@ -181,7 +196,6 @@
         grid-template-columns: 250px minmax(0, 1fr);
         gap: 24px;
     }
-
     .pside { padding: 8px 16px 14px; }
     .pl .price__card.is-compact { padding: 6px 22px 8px; }
     .pcols.is-two { column-gap: 30px; }

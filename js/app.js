@@ -36,12 +36,13 @@ const plural = (n, one, few, many) => {
 };
 
 function priceText(item) {
-    const n = fmt(item[1]);
+    const n = item[6] ? `${fmt(item[1])}\u00A0\u2013\u00A0${fmt(item[6])}` : fmt(item[1]);
+    const from = item[3] && !item[6];
     if (lang === 'ky')
-        return `${n}\u00A0${item[3] ? 'сомдон' : 'сом'}`;
+        return `${n}\u00A0${from ? 'сомдон' : 'сом'}`;
     if (lang === 'en')
-        return `${item[3] ? 'from\u00A0' : ''}${n}\u00A0som`;
-    return `${item[3] ? 'от\u00A0' : ''}${n}\u00A0сом`;
+        return `${from ? 'from\u00A0' : ''}${n}\u00A0som`;
+    return `${from ? 'от\u00A0' : ''}${n}\u00A0сом`;
 }
 
 function countText(n) {

@@ -191,12 +191,9 @@ function renderServices() {
     startSlides();
 }
 
-/* ---------- Прайс: фильтр слева, цены справа ---------- */
-
 const tabs = must('#tabs');
 const price = must('#price');
 
-// Оборачиваем фильтр и прайс в двухколоночный блок (HTML менять не нужно)
 const pl = document.createElement('div');
 pl.className = 'pl';
 tabs.parentNode.insertBefore(pl, tabs);
@@ -207,7 +204,7 @@ price.classList.add('pmain');
 
 const HEADER_GAP = 90;
 const MOBILE = 900;
-const TWO_COLS_MIN = 560; // минимальная ширина карточки для двух столбцов
+const TWO_COLS_MIN = 560;
 let panelOpen = false;
 
 const FT = {
@@ -222,7 +219,6 @@ function scrollToPrices() {
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
 }
 
-// если верх прайса ушёл выше экрана, подтягиваем к нему
 function keepInView() {
     const top = pl.getBoundingClientRect().top;
     if (top < HEADER_GAP - 20)
@@ -299,7 +295,6 @@ tabs.addEventListener('click', (e) => {
         const next = view(state.g).find(s => s.id === sec.dataset.fsec);
         state.section = sec.dataset.fsec;
         state.group = null;
-        // на телефоне: у раздела без категорий сразу закрываем панель
         if (window.innerWidth <= MOBILE && !(next && next.priceOnly && next.groups.length > 1))
             panelOpen = false;
         renderPrices();
@@ -317,7 +312,6 @@ tabs.addEventListener('click', (e) => {
     }
 });
 
-// делит категории на два столбца целыми блоками, первый столбец чуть длиннее
 function splitCols(groups) {
     if (groups.length === 1) {
         const g = groups[0];
@@ -358,7 +352,7 @@ function renderPrices(keepAnim) {
 
     const groups = state.group === null ? s.groups : [s.groups[state.group]];
     const total = groups.reduce((n, gr) => n + gr.items.length, 0);
-    const big = total > 14; // длинный список: два столбца и компактные строки
+    const big = total > 14;
     let body;
     if (big) {
         const [a, b] = splitCols(groups);
@@ -370,8 +364,6 @@ function renderPrices(keepAnim) {
     swapAnim(price);
     fitPrices();
 }
-
-/* ---------- Язык, пол, меню ---------- */
 
 function applyStatic() {
     document.documentElement.lang = lang;
@@ -497,3 +489,41 @@ document.querySelectorAll('.reveal').forEach(el => {
         box.appendChild(mote);
     }
 })();
+
+function closeMobileNav() {
+    nav.classList.remove('is-open');
+    burger.classList.remove('is-open');
+    burger.setAttribute('aria-expanded', 'false');
+}
+
+function goTop() {
+    closeMobileNav();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+head.addEventListener('click', (e) => {
+    if (e.target.closest('a, button, .lang, .mnav'))
+        return;
+    goTop();
+});
+
+head.querySelector('.brand').addEventListener('click', (e) => {
+    e.preventDefault();
+    goTop();
+});
+
+const spyLinks = [...document.querySelectorAll('.nav a[href^="#"], .mnav a[href^="#"]')];
+const spyIds = ['services', 'prices'];
+
+function spy() {
+    let cur = '';
+    spyIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= 160)
+            cur = id;
+    });
+    spyLinks.forEach(a => a.classList.toggle('is-active', a.getAttribute('href') === '#' + cur));
+}
+
+spy();
+window.addEventListener('scroll', spy, { passive: true });

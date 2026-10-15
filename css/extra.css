@@ -248,8 +248,3 @@
 
     .pside__panel.is-open { display: block; }
 }
-
-.pl {
-    min-height: calc(100vh - 120px);
-    min-height: calc(100svh - 120px);
-}

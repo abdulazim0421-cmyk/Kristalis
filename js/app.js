@@ -219,11 +219,10 @@ function scrollToPrices() {
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
 }
 
-function scrollToList() {
+function jumpToListTop() {
     const top = pl.getBoundingClientRect().top + window.scrollY - HEADER_GAP;
-    if (Math.abs(top - window.scrollY) < 4)
-        return;
-    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    if (window.scrollY > top)
+        window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
 }
 
 function fitPrices() {
@@ -301,7 +300,7 @@ tabs.addEventListener('click', (e) => {
         if (window.innerWidth <= MOBILE && !(next && next.priceOnly && next.groups.length > 1))
             panelOpen = false;
         renderPrices();
-        scrollToList();
+        jumpToListTop();
         return;
     }
 
@@ -311,7 +310,7 @@ tabs.addEventListener('click', (e) => {
         if (window.innerWidth <= MOBILE)
             panelOpen = false;
         renderPrices();
-        scrollToList();
+        jumpToListTop();
     }
 });
 
@@ -339,20 +338,6 @@ function splitCols(groups) {
     return [groups.slice(0, best), groups.slice(best)];
 }
 
-let unlockTimer = 0;
-
-function lockHeight() {
-    clearTimeout(unlockTimer);
-    pl.style.minHeight = pl.offsetHeight + 'px';
-}
-
-function unlockHeightLater() {
-    clearTimeout(unlockTimer);
-    unlockTimer = setTimeout(() => {
-        pl.style.minHeight = '';
-    }, 1100);
-}
-
 function renderPrices(keepAnim) {
     const secs = view(state.g);
     if (!secs.some(s => s.id === state.section)) {
@@ -362,9 +347,6 @@ function renderPrices(keepAnim) {
     const s = secs.find(x => x.id === state.section);
     if (state.group !== null && !s.groups[state.group])
         state.group = null;
-
-    if (keepAnim !== true)
-        lockHeight();
 
     renderSide(secs, s);
     if (keepAnim === true)
@@ -383,7 +365,6 @@ function renderPrices(keepAnim) {
     price.innerHTML = `<div class="price__card"${big ? ' data-big="1"' : ''}>${body}</div>`;
     swapAnim(price);
     fitPrices();
-    unlockHeightLater();
 }
 
 function applyStatic() {

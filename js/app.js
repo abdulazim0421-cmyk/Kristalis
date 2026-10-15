@@ -219,10 +219,11 @@ function scrollToPrices() {
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
 }
 
-function keepInView() {
-    const top = pl.getBoundingClientRect().top;
-    if (top < HEADER_GAP - 20)
-        window.scrollTo({ top: Math.max(0, top + window.scrollY - HEADER_GAP), behavior: 'smooth' });
+function scrollToList() {
+    const top = pl.getBoundingClientRect().top + window.scrollY - HEADER_GAP;
+    if (Math.abs(top - window.scrollY) < 4)
+        return;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
 }
 
 function fitPrices() {
@@ -300,7 +301,7 @@ tabs.addEventListener('click', (e) => {
         if (window.innerWidth <= MOBILE && !(next && next.priceOnly && next.groups.length > 1))
             panelOpen = false;
         renderPrices();
-        keepInView();
+        scrollToList();
         return;
     }
 
@@ -310,7 +311,7 @@ tabs.addEventListener('click', (e) => {
         if (window.innerWidth <= MOBILE)
             panelOpen = false;
         renderPrices();
-        keepInView();
+        scrollToList();
     }
 });
 
@@ -349,7 +350,7 @@ function unlockHeightLater() {
     clearTimeout(unlockTimer);
     unlockTimer = setTimeout(() => {
         pl.style.minHeight = '';
-    }, 800);
+    }, 1100);
 }
 
 function renderPrices(keepAnim) {

@@ -97,9 +97,7 @@
 
 .pl .note { margin-top: 10px; }
 
-/* ---------- Прайс для Кухни / Бара / Магазина ---------- */
-.price__card[data-big] { column-gap: 48px; }
-
+/* ---------- Длинные разделы: компактные строки ---------- */
 .price__card[data-big] .price__list li {
     gap: 10px;
     padding-block: 6px;
@@ -115,7 +113,34 @@
     font-size: 17px;
 }
 
-.price__card[data-big] > .price__group:first-child { margin-top: 8px; }
+/* ---------- Два столбца целыми категориями ---------- */
+.pcols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.pcols.is-two {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 44px;
+    align-items: start;
+}
+
+.pcol { min-width: 0; }
+
+.pcol > .price__group:first-child { margin-top: 8px; }
+.pcols:not(.is-two) .pcol + .pcol > .price__group:first-child { margin-top: 16px; }
+
+/* ---------- Средний экран (моноблок): фильтр уже, прайсу больше места ---------- */
+@media (min-width: 901px) and (max-width: 1200px) {
+    .pl {
+        grid-template-columns: 250px minmax(0, 1fr);
+        gap: 24px;
+    }
+
+    .pside { padding: 8px 16px 14px; }
+    .pl .price__card.is-compact { padding: 6px 22px 8px; }
+    .pcols.is-two { column-gap: 30px; }
+}
 
 /* ---------- Телефон и планшет: фильтр сворачивается ---------- */
 @media (max-width: 900px) {

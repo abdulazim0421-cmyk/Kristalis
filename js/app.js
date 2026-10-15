@@ -207,6 +207,7 @@ price.classList.add('pmain');
 
 const HEADER_GAP = 90;
 const MOBILE = 900;
+const TWO_COLS_MIN = 560; // минимальная ширина карточки для двух столбцов
 let panelOpen = false;
 
 const FT = {
@@ -232,13 +233,10 @@ function fitPrices() {
     const card = price.querySelector('.price__card');
     if (!card)
         return;
-    card.classList.remove('is-compact');
-    card.style.columnCount = '';
-    if (card.dataset.big) {
-        card.classList.add('is-compact');
-        if (card.clientWidth >= 700)
-            card.style.columnCount = 2;
-    }
+    card.classList.toggle('is-compact', !!card.dataset.big);
+    const cols = card.querySelector('.pcols');
+    if (cols)
+        cols.classList.toggle('is-two', card.clientWidth >= TWO_COLS_MIN);
 }
 
 list.addEventListener('click', (e) => {
@@ -302,7 +300,7 @@ tabs.addEventListener('click', (e) => {
         state.section = sec.dataset.fsec;
         state.group = null;
         // на телефоне: у раздела без категорий сразу закрываем панель
-        if (window.innerWidth < MAX_MOBILE() && !(next && next.priceOnly && next.groups.length > 1))
+        if (window.innerWidth <= MOBILE && !(next && next.priceOnly && next.groups.length > 1))
             panelOpen = false;
         renderPrices();
         keepInView();
@@ -312,14 +310,37 @@ tabs.addEventListener('click', (e) => {
     const grp = e.target.closest('[data-fgrp]');
     if (grp) {
         state.group = grp.dataset.fgrp === '' ? null : Number(grp.dataset.fgrp);
-        if (window.innerWidth < MAX_MOBILE())
+        if (window.innerWidth <= MOBILE)
             panelOpen = false;
         renderPrices();
         keepInView();
     }
 });
 
-function MAX_MOBILE() { return MOBILE; }
+// делит категории на два столбца целыми блоками, первый столбец чуть длиннее
+function splitCols(groups) {
+    if (groups.length === 1) {
+        const g = groups[0];
+        const k = Math.ceil(g.items.length / 2);
+        return [
+            [{ title: g.title, items: g.items.slice(0, k) }],
+            [{ title: '', items: g.items.slice(k) }],
+        ];
+    }
+    const w = groups.map(g => g.items.length + 1.8);
+    const sum = w.reduce((a, b) => a + b, 0);
+    let best = 1, bestScore = Infinity, left = 0;
+    for (let k = 1; k < groups.length; k++) {
+        left += w[k - 1];
+        const d = left - (sum - left);
+        const score = d >= 0 ? d : -d * 2;
+        if (score < bestScore) {
+            bestScore = score;
+            best = k;
+        }
+    }
+    return [groups.slice(0, best), groups.slice(best)];
+}
 
 function renderPrices(keepAnim) {
     const secs = view(state.g);
@@ -337,8 +358,15 @@ function renderPrices(keepAnim) {
 
     const groups = state.group === null ? s.groups : [s.groups[state.group]];
     const total = groups.reduce((n, gr) => n + gr.items.length, 0);
-    const big = total > 14;
-    price.innerHTML = `<div class="price__card"${big ? ' data-big="1"' : ''}>${groups.map(groupHtml).join('')}</div>`;
+    const big = total > 14; // длинный список: два столбца и компактные строки
+    let body;
+    if (big) {
+        const [a, b] = splitCols(groups);
+        body = `<div class="pcols"><div class="pcol">${a.map(groupHtml).join('')}</div><div class="pcol">${b.map(groupHtml).join('')}</div></div>`;
+    } else {
+        body = groups.map(groupHtml).join('');
+    }
+    price.innerHTML = `<div class="price__card"${big ? ' data-big="1"' : ''}>${body}</div>`;
     swapAnim(price);
     fitPrices();
 }

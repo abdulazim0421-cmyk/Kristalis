@@ -195,7 +195,7 @@ const tabs = must('#tabs');
 const price = must('#price');
 
 const HEADER_GAP = 80;
-const GROUP_GAP = 100;
+const GROUP_GAP = 110;
 
 function priceAnchor() {
     return must('#prices .title').getBoundingClientRect().top + window.scrollY - HEADER_GAP;
@@ -249,6 +249,7 @@ function renderPrices() {
     const subnav = s.priceOnly && s.groups.length > 1
         ? `<div class="subnav">${s.groups.map((gr, i) => `<button type="button" data-grp="${i}">${gr.title}</button>`).join('')}</div>`
         : '';
+    clearFlash();
     price.innerHTML = `${subnav}<div class="price__card"${s.priceOnly ? ' data-big="1"' : ''}>${s.groups.map(groupHtml).join('')}</div>`;
     swapAnim(price);
     fitPrices();
@@ -263,13 +264,34 @@ tabs.addEventListener('click', (e) => {
     }
 });
 
+let flashTimer = 0;
+
+function clearFlash() {
+    clearTimeout(flashTimer);
+    price.querySelectorAll('.is-flash').forEach(x => x.classList.remove('is-flash'));
+}
+
+price.addEventListener('animationend', (e) => {
+    if (e.target.classList.contains('is-flash'))
+        e.target.classList.remove('is-flash');
+});
+
 price.addEventListener('click', (e) => {
     const b = e.target.closest('[data-grp]');
     if (!b)
         return;
-    const el = price.querySelector(`#pg-${b.dataset.grp}`);
-    if (el)
-        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - GROUP_GAP, behavior: 'smooth' });
+    const head = price.querySelector(`#pg-${b.dataset.grp}`);
+    if (!head)
+        return;
+    price.querySelectorAll('.subnav button').forEach(x => x.classList.toggle('is-on', x === b));
+    window.scrollTo({ top: head.getBoundingClientRect().top + window.scrollY - GROUP_GAP, behavior: 'smooth' });
+    clearFlash();
+    void head.offsetWidth;
+    head.classList.add('is-flash');
+    const rows = head.nextElementSibling;
+    if (rows)
+        rows.classList.add('is-flash');
+    flashTimer = setTimeout(clearFlash, 2500);
 });
 
 function applyStatic() {

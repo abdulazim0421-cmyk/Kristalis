@@ -15,8 +15,6 @@
 
     --header-offset: 80px;
     --radius: 18px;
-
-    --gold-fill: linear-gradient(180deg, #f8dba0, #e2ab5c);
 }
 
 *,
@@ -368,81 +366,68 @@ button {
 
 .hero__actions {
     position: relative;
-    display: flex;
-    width: min(480px, 100%);
-    height: 76px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: max-content;
+    max-width: 100%;
     margin-inline: auto;
-    overflow: hidden;
-    border: 1px solid rgba(240, 194, 122, 0.9);
+    padding: 5px;
+    border: 1px solid rgba(246, 234, 215, 0.3);
     border-radius: 999px;
-    background: transparent;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35), 0 0 30px rgba(240, 194, 122, 0.12);
+    background: rgba(14, 8, 4, 0.62);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 .hero__actions::before {
     content: '';
     position: absolute;
-    z-index: 2;
-    top: 12px;
-    bottom: 12px;
-    left: 50%;
-    width: 1px;
-    background: linear-gradient(180deg, rgba(240, 194, 122, 0.6) 0, rgba(240, 194, 122, 0.6) calc(50% - 15px), transparent calc(50% - 15px), transparent calc(50% + 15px), rgba(240, 194, 122, 0.6) calc(50% + 15px), rgba(240, 194, 122, 0.6) 100%);
+    z-index: 0;
+    top: 5px;
+    bottom: 5px;
+    left: 5px;
+    width: calc(50% - 5px);
+    border-radius: 999px;
+    background: var(--cream);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    transition: transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
     pointer-events: none;
 }
 
-.hero__actions::after {
-    content: '';
-    position: absolute;
-    z-index: 3;
-    top: 50%;
-    left: 50%;
-    width: 13px;
-    height: 13px;
-    background: var(--gold-fill);
-    box-shadow: 0 0 0 1.5px rgba(14, 8, 4, 0.55), 0 0 14px rgba(240, 194, 122, 0.5);
-    transform: translate(-50%, -50%) rotate(45deg);
-    pointer-events: none;
-}
+.hero__actions[data-active="f"]::before { transform: translateX(100%); }
 
 .pill {
     position: relative;
     z-index: 1;
-    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 0 20px;
-    background: rgba(14, 8, 4, 0.78);
-    color: #fff;
+    min-width: 190px;
+    padding: 14px 36px;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--cream);
+    font-family: var(--font-head);
     font-size: 20px;
-    font-weight: 500;
-    text-shadow: 0 1px 4px rgba(14, 8, 4, 0.9), 0 2px 16px rgba(14, 8, 4, 0.8);
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-align: center;
+    text-shadow: 0 1px 10px rgba(14, 8, 4, 0.7);
+    text-transform: uppercase;
     cursor: pointer;
-    transition: background 0.25s ease;
+    transition: color 0.3s, text-shadow 0.3s, transform 0.2s;
 }
 
-.pill__ic {
-    flex: none;
-    width: 28px;
-    height: 28px;
-    fill: none;
-    stroke: var(--amber);
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    filter: drop-shadow(0 1px 4px rgba(14, 8, 4, 0.8));
+.pill__ic { display: none; }
+
+.hero__actions[data-active="m"] .pill[data-g="m"],
+.hero__actions[data-active="f"] .pill[data-g="f"] {
+    color: var(--night);
+    text-shadow: none;
 }
 
-.pill:active {
-    background: rgba(14, 8, 4, 0);
-}
-
-@media (hover: hover) {
-    .pill:hover { background: rgba(14, 8, 4, 0.9); }
-    .pill:hover:active { background: rgba(14, 8, 4, 0); }
-}
+.pill:active { transform: scale(0.96); }
 
 .motes {
     position: absolute;
@@ -887,7 +872,7 @@ button {
         font-size: clamp(13px, min(1.4vw, 2vh), 18px);
     }
 
-    .hero__actions { height: clamp(60px, 9vh, 76px); }
+    .pill { padding-block: clamp(11px, 1.9vh, 14px); }
 }
 
 @media (max-width: 960px) {
@@ -930,15 +915,13 @@ button {
 }
 
 @media (max-width: 640px) {
-    .hero__actions { height: 64px; }
+    .hero__actions { width: 100%; }
 
     .pill {
-        gap: 8px;
-        padding: 0 12px;
-        font-size: 17px;
+        min-width: 0;
+        padding: 12px 16px;
+        font-size: 16px;
     }
-
-    .pill__ic { width: 24px; height: 24px; }
 
     .lang button { min-width: 44px; padding: 8px 10px; }
 

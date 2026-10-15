@@ -298,6 +298,9 @@ function setGender(g, rerender = true) {
         b.classList.toggle('is-active', on);
         b.setAttribute('aria-selected', String(on));
     });
+    document.querySelectorAll('.hero__actions').forEach(box => {
+        box.dataset.active = g;
+    });
     if (rerender) {
         renderServices();
         renderPrices();
@@ -306,7 +309,21 @@ function setGender(g, rerender = true) {
 
 document.addEventListener('click', (e) => {
     const el = e.target.closest('[data-g]');
-    if (!el || el.dataset.g === state.g)
+    if (!el)
+        return;
+
+    if (el.closest('.hero__actions')) {
+        e.preventDefault();
+        const same = el.dataset.g === state.g;
+        if (!same)
+            setGender(el.dataset.g);
+        setTimeout(() => {
+            must('#services').scrollIntoView({ behavior: 'smooth' });
+        }, same ? 120 : 430);
+        return;
+    }
+
+    if (el.dataset.g === state.g)
         return;
 
     const inPage = !!el.closest('.gender');

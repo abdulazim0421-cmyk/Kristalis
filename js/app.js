@@ -236,7 +236,7 @@ function fitPrices() {
     card.style.columnCount = '';
     if (card.dataset.big) {
         card.classList.add('is-compact');
-        if (window.innerWidth >= 1280)
+        if (card.clientWidth >= 700)
             card.style.columnCount = 2;
     }
 }
@@ -336,7 +336,8 @@ function renderPrices(keepAnim) {
         return;
 
     const groups = state.group === null ? s.groups : [s.groups[state.group]];
-    const big = s.priceOnly && groups.length > 1;
+    const total = groups.reduce((n, gr) => n + gr.items.length, 0);
+    const big = total > 14;
     price.innerHTML = `<div class="price__card"${big ? ' data-big="1"' : ''}>${groups.map(groupHtml).join('')}</div>`;
     swapAnim(price);
     fitPrices();

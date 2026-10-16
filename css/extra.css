@@ -8,8 +8,20 @@
 }
 
 #prices {
-    min-height: calc(100vh - 64px);
-    min-height: calc(100svh - 64px);
+    min-height: calc(100vh - 134px);
+    min-height: calc(100svh - 134px);
+}
+
+@media (min-width: 901px) {
+    html {
+        scroll-snap-type: y proximity;
+    }
+
+    #prices {
+        scroll-snap-align: start;
+        scroll-snap-stop: normal;
+        scroll-margin-top: 50px;
+    }
 }
 
 .pside {

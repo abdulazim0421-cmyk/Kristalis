@@ -18,6 +18,7 @@ const ICONS = {
 };
 
 const MAX_SHOWN = 8;
+const SECTION_OFFSET = 50;
 
 let lang = 'ru';
 const state = { g: 'm', section: null, group: null };
@@ -213,7 +214,7 @@ const FT = {
 const ft = (k) => FT[lang][k];
 
 function pricesTop() {
-    return must('#prices .title').getBoundingClientRect().top + window.scrollY - 80;
+    return must('#prices').getBoundingClientRect().top + window.scrollY - SECTION_OFFSET;
 }
 
 function scrollToPrices() {
@@ -236,8 +237,7 @@ function fitPrices() {
 function fitSectionHeight() {
     const sec = must('#prices');
     const foot = must('.footer');
-    const pad = parseFloat(getComputedStyle(sec).paddingTop) || 0;
-    const h = window.innerHeight - foot.offsetHeight + pad - 80;
+    const h = window.innerHeight - foot.offsetHeight - SECTION_OFFSET;
     sec.style.minHeight = Math.max(0, h) + 'px';
 }
 

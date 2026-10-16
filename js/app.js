@@ -20,7 +20,6 @@ const ICONS = {
 const FOOD_ICON = '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 8v14a4 4 0 0 0 4 4v30M28 8v14a4 4 0 0 1-4 4M44 8c-6 4-8 12-8 20h8v28"/></svg>';
 
 const MAX_SHOWN = 8;
-const SECTION_OFFSET = 50;
 const FOOD_DIR = 'img/menu/';
 const FOOD_PREFIX = 'menu';
 const FOOD_EXT = ['jpg', 'png', 'webp', 'jpeg'];
@@ -40,6 +39,14 @@ const plural = (n, one, few, many) => {
     if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
     return many;
 };
+
+function sectionOffset() {
+    return must('.brand').offsetHeight + 20;
+}
+
+function viewportH() {
+    return document.documentElement.clientHeight || window.innerHeight;
+}
 
 function priceText(item) {
     const n = item[6] ? `${fmt(item[1])}\u00A0\u2013\u00A0${fmt(item[6])}` : fmt(item[1]);
@@ -277,7 +284,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 function pricesTop() {
-    return must('#prices').getBoundingClientRect().top + window.scrollY - SECTION_OFFSET;
+    return must('#prices').getBoundingClientRect().top + window.scrollY - sectionOffset();
 }
 
 function scrollToPrices() {
@@ -285,9 +292,8 @@ function scrollToPrices() {
 }
 
 function jumpToListTop() {
-    const top = pricesTop();
-    if (window.scrollY > top)
-        window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+    fitSectionHeight();
+    window.scrollTo({ top: Math.max(0, pricesTop()), behavior: 'instant' });
 }
 
 function fitPrices() {
@@ -300,8 +306,9 @@ function fitPrices() {
 function fitSectionHeight() {
     const sec = must('#prices');
     const foot = must('.footer');
-    const h = window.innerHeight - foot.offsetHeight - SECTION_OFFSET;
-    sec.style.minHeight = Math.max(0, h) + 'px';
+    const h = viewportH() - foot.offsetHeight - sectionOffset();
+    sec.style.boxSizing = 'border-box';
+    sec.style.minHeight = Math.max(0, Math.ceil(h)) + 'px';
 }
 
 list.addEventListener('click', (e) => {
@@ -311,6 +318,7 @@ list.addEventListener('click', (e) => {
     state.section = go.dataset.go;
     state.group = null;
     renderPrices();
+    fitSectionHeight();
     scrollToPrices();
 });
 
@@ -609,6 +617,7 @@ document.addEventListener('click', (e) => {
     const before = inPage ? el.getBoundingClientRect().top : 0;
 
     setGender(el.dataset.g);
+    fitSectionHeight();
 
     if (inPage) {
         const delta = el.getBoundingClientRect().top - before;
@@ -627,19 +636,16 @@ applyStatic();
 renderServices();
 renderPrices();
 
-let lastW = window.innerWidth;
 let resizeTimer = 0;
 window.addEventListener('resize', () => {
     const w = window.innerWidth;
     if (w > MOBILE && panelOpen)
         closePanel();
+    fitSectionHeight();
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
         fitPrices();
-        if (w !== lastW) {
-            lastW = w;
-            fitSectionHeight();
-        }
+        fitSectionHeight();
     }, 150);
 });
 if (document.fonts && document.fonts.ready)

@@ -120,9 +120,12 @@ button {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 56px;
     padding-block: 18px;
     transition: padding 0.35s;
 }
+
+.brand { flex: 0 0 auto; }
 
 .head.is-scrolled .header__inner { padding-block: 10px; }
 

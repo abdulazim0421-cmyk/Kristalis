@@ -17,11 +17,16 @@ const ICONS = {
     nails: '<path d="M32 8l20 14-20 34L12 22z"/><path d="M12 22h40M24 22l8 34 8-34M32 8l-8 14M32 8l8 14"/>',
 };
 
+const FOOD_ICON = '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 8v14a4 4 0 0 0 4 4v30M28 8v14a4 4 0 0 1-4 4M44 8c-6 4-8 12-8 20h8v28"/></svg>';
+
 const MAX_SHOWN = 8;
 const SECTION_OFFSET = 50;
+const FOOD_DIR = 'img/menu/';
+const FOOD_PREFIX = 'menu';
+const FOOD_EXT = ['jpg', 'png', 'webp', 'jpeg'];
 
 let lang = 'ru';
-const state = { g: 'm', section: null, group: null };
+const state = { g: 'm', section: null, group: null, mode: 'list' };
 
 const t = (key) => UI[lang][key];
 const tr = (obj) => obj[lang] || obj.ru;
@@ -207,9 +212,9 @@ const MOBILE = 900;
 let panelOpen = false;
 
 const FT = {
-    ru: { filter: 'Фильтр', sections: 'Раздел', services: 'Услуги', extra: 'Кухня, бар', shop: 'Магазин', all: 'Все категории' },
-    ky: { filter: 'Чыпка', sections: 'Бөлүм', services: 'Кызматтар', extra: 'Ашкана, бар', shop: 'Дүкөн', all: 'Бардык категориялар' },
-    en: { filter: 'Filter', sections: 'Section', services: 'Services', extra: 'Kitchen, bar', shop: 'Shop', all: 'All categories' },
+    ru: { filter: 'Фильтр', sections: 'Раздел', services: 'Услуги', extra: 'Кухня, бар', shop: 'Магазин', all: 'Все категории', modeList: 'Список', modePhoto: 'С фото' },
+    ky: { filter: 'Чыпка', sections: 'Бөлүм', services: 'Кызматтар', extra: 'Ашкана, бар', shop: 'Дүкөн', all: 'Бардык категориялар', modeList: 'Тизме', modePhoto: 'Сүрөт менен' },
+    en: { filter: 'Filter', sections: 'Section', services: 'Services', extra: 'Kitchen, bar', shop: 'Shop', all: 'All categories', modeList: 'List', modePhoto: 'With photos' },
 };
 const ft = (k) => FT[lang][k];
 
@@ -256,6 +261,85 @@ const rowHtml = (it, i) => `<li style="--d:${Math.min(i, 8) * 40}ms"><span>${esc
 function groupHtml(gr) {
     return `${gr.title ? `<h4 class="price__group">${gr.title}</h4>` : ''}<ul class="price__list">${gr.items.map(rowHtml).join('')}</ul>`;
 }
+
+const foodNum = new Map();
+
+(function numberFood() {
+    const kitchen = SECTIONS.find(s => s.id === 'kitchen');
+    if (!kitchen)
+        return;
+    let n = 0;
+    kitchen.groups.forEach(gr => gr.items.forEach(it => {
+        n += 1;
+        foodNum.set(it, n);
+    }));
+})();
+
+function foodCandidates(item) {
+    const n = foodNum.get(item);
+    if (!n)
+        return [];
+    return FOOD_EXT.map(ext => `${FOOD_DIR}${FOOD_PREFIX}${n}.${ext}`);
+}
+
+function foodErr(img) {
+    const rest = (img.dataset.fb || '').split('|').filter(Boolean);
+    if (rest.length) {
+        img.dataset.fb = rest.slice(1).join('|');
+        img.src = rest[0];
+    } else {
+        img.remove();
+    }
+}
+
+window.foodErr = foodErr;
+
+window.foodFiles = function () {
+    const rows = [];
+    SECTIONS.filter(s => s.id === 'kitchen').forEach(s => {
+        s.groups.forEach(gr => gr.items.forEach(it => {
+            rows.push({
+                number: foodNum.get(it),
+                dish: it[0],
+                file: `${FOOD_DIR}${FOOD_PREFIX}${foodNum.get(it)}.jpg`,
+            });
+        }));
+    });
+    console.table(rows);
+    return rows;
+};
+
+function cardHtml(it, i) {
+    const n = esc(nameOf(it));
+    const c = foodCandidates(it);
+    const img = c.length
+        ? `<img src="${esc(c[0])}" data-fb="${esc(c.slice(1).join('|'))}" alt="${n}" loading="lazy" decoding="async" onerror="foodErr(this)">`
+        : '';
+    return `<li class="fcard" style="--d:${Math.min(i, 10) * 35}ms">`
+        + `<div class="fcard__img">${FOOD_ICON}${img}</div>`
+        + `<div class="fcard__body"><span class="fcard__name">${n}</span><b class="fcard__price">${priceText(it)}</b></div>`
+        + `</li>`;
+}
+
+function photoGroupHtml(gr) {
+    return `${gr.title ? `<h4 class="price__group">${gr.title}</h4>` : ''}<ul class="pgrid">${gr.items.map((it, i) => cardHtml(it, i)).join('')}</ul>`;
+}
+
+function modeBar() {
+    return `<div class="vmode" role="group">`
+        + `<button type="button" data-mode="list" class="${state.mode === 'list' ? 'is-on' : ''}">${ft('modeList')}</button>`
+        + `<button type="button" data-mode="photo" class="${state.mode === 'photo' ? 'is-on' : ''}">${ft('modePhoto')}</button>`
+        + `</div>`;
+}
+
+price.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-mode]');
+    if (!b || b.dataset.mode === state.mode)
+        return;
+    state.mode = b.dataset.mode;
+    renderPrices();
+    jumpToListTop();
+});
 
 const ICON_FILTER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
@@ -361,17 +445,22 @@ function renderPrices(keepAnim) {
     if (keepAnim === true)
         return;
 
+    const isKitchen = s.id === 'kitchen';
+    const photo = isKitchen && state.mode === 'photo';
     const groups = state.group === null ? s.groups : [s.groups[state.group]];
     const total = groups.reduce((n, gr) => n + gr.items.length, 0);
-    const big = total > 14;
+    const big = !photo && total > 14;
     let body;
-    if (big) {
+    if (photo) {
+        body = groups.map(photoGroupHtml).join('');
+    } else if (big) {
         const [a, b] = splitCols(groups);
         body = `<div class="pcols"><div class="pcol">${a.map(groupHtml).join('')}</div><div class="pcol">${b.map(groupHtml).join('')}</div></div>`;
     } else {
         body = groups.map(groupHtml).join('');
     }
-    price.innerHTML = `<div class="price__card"${big ? ' data-big="1"' : ''}>${body}</div>`;
+    price.innerHTML = (isKitchen ? modeBar() : '')
+        + `<div class="price__card${photo ? ' pcard--photo' : ''}"${big ? ' data-big="1"' : ''}>${body}</div>`;
     swapAnim(price);
     fitPrices();
 }

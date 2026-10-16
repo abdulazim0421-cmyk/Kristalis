@@ -8,8 +8,8 @@
 }
 
 #prices {
-    min-height: calc(100vh - 134px);
-    min-height: calc(100svh - 134px);
+    min-height: calc(100vh - 154px);
+    min-height: calc(100svh - 154px);
 }
 
 @media (min-width: 901px) {

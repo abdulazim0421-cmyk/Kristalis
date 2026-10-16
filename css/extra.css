@@ -4,7 +4,7 @@ html.no-scroll {
 
 .pl {
     display: grid;
-    grid-template-columns: 340px minmax(0, 1fr);
+    grid-template-columns: 300px minmax(0, 1fr);
     gap: 28px;
     align-items: start;
     margin-top: 34px;
@@ -164,34 +164,20 @@ html.no-scroll {
 }
 
 .fcats {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 8px;
-    padding: 4px 0 8px;
+    padding-bottom: 6px;
     border-bottom: 1px solid #eee;
 }
 
-.fcats .fopt--sub:first-child {
-    grid-column: 1 / -1;
-}
-
 .fopt--sub {
-    gap: 9px;
-    padding: 8px 0;
+    padding: 9px 0 9px 36px;
     border-bottom: 0;
-    font-size: 14px;
-    line-height: 1.25;
+    font-size: 15px;
 }
 
 .fopt--sub .fopt__mark {
-    flex-basis: 16px;
-    width: 16px;
-    height: 16px;
-    border-width: 2px;
-}
-
-.fopt--sub .fopt__mark::after {
-    inset: 2px;
+    flex-basis: 18px;
+    width: 18px;
+    height: 18px;
 }
 
 .pcols {
@@ -286,7 +272,15 @@ html.no-scroll {
 
 @media (min-width: 901px) and (max-width: 1100px) {
     .pcols {
-        display: block;
+        column-gap: 28px;
+    }
+
+    .pmain .price__card {
+        padding-inline: 22px;
+    }
+
+    .vmode--card {
+        right: 22px;
     }
 
     .pgrid {
@@ -334,7 +328,7 @@ html.no-scroll {
         bottom: 0;
         left: 0;
         z-index: 60;
-        width: min(90vw, 360px);
+        width: min(86vw, 340px);
         max-height: none;
         padding: 0 20px 28px;
         border-radius: 0 var(--radius) var(--radius) 0;

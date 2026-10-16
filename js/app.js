@@ -62,15 +62,16 @@ function countText(n) {
 function view(g) {
     const male = g === 'm';
     return SECTIONS.map(s => {
+        const title = tr(male && s.titleM ? s.titleM : s.title);
         const groups = s.groups
-            .map(gr => ({ title: gr.title ? tr(gr.title) : '', items: gr.items.filter(it => it[2].includes(g)) }))
+            .map(gr => ({ title: gr.title ? tr(gr.title) : title, items: gr.items.filter(it => it[2].includes(g)) }))
             .filter(gr => gr.items.length);
         const text = male && s.textM ? s.textM : s.text;
         return {
             id: s.id,
             priceOnly: !!s.priceOnly,
             groups,
-            title: tr(male && s.titleM ? s.titleM : s.title),
+            title,
             text: text ? tr(text) : '',
             note: s.note ? tr(s.note) : '',
         };
@@ -98,6 +99,13 @@ function pickShown(s) {
 }
 
 const list = must('#svc-list');
+const langBox = must('#lang');
+const langBtn = must('#lang-btn');
+
+function setLangMenu(open) {
+    langBox.classList.toggle('is-open', open);
+    langBtn.setAttribute('aria-expanded', String(open));
+}
 
 function renderService(s, i) {
     const total = s.groups.reduce((n, gr) => n + gr.items.length, 0);
@@ -132,6 +140,7 @@ function probe(url) {
     if (!photoCache.has(url)) {
         photoCache.set(url, new Promise(resolve => {
             const im = new Image();
+            im.decoding = 'async';
             im.onload = () => resolve(url);
             im.onerror = () => resolve(null);
             im.src = url;
@@ -140,32 +149,50 @@ function probe(url) {
     return photoCache.get(url);
 }
 
+function initSlides(card) {
+    const i = Number(card.dataset.i) || 0;
+    const urls = PHOTOS[card.dataset.id] || [];
+    Promise.all(urls.map(probe)).then(all => {
+        const ok = all.filter(Boolean);
+        if (!ok.length || !card.isConnected)
+            return;
+        const box = card.querySelector('.svc__slides');
+        ok.forEach(url => {
+            const d = document.createElement('div');
+            d.className = 'slide';
+            d.style.backgroundImage = `url("${url}")`;
+            box.appendChild(d);
+        });
+        const slides = box.children;
+        slides[0].classList.add('is-on');
+        if (slides.length < 2)
+            return;
+        let n = 0;
+        slideTimers.push(setInterval(() => {
+            if (document.hidden)
+                return;
+            slides[n].classList.remove('is-on');
+            n = (n + 1) % slides.length;
+            slides[n].classList.add('is-on');
+        }, 6000 + (i % 4) * 1000));
+    });
+}
+
+const slideIo = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            slideIo.unobserve(entry.target);
+            initSlides(entry.target);
+        }
+    });
+}, { rootMargin: '300px 0px' });
+
 function startSlides() {
     slideTimers.splice(0).forEach(clearInterval);
+    slideIo.disconnect();
     list.querySelectorAll('.svc__img').forEach((card, i) => {
-        const urls = PHOTOS[card.dataset.id] || [];
-        Promise.all(urls.map(probe)).then(all => {
-            const ok = all.filter(Boolean);
-            if (!ok.length || !card.isConnected)
-                return;
-            const box = card.querySelector('.svc__slides');
-            ok.forEach(url => {
-                const d = document.createElement('div');
-                d.className = 'slide';
-                d.style.backgroundImage = `url("${url}")`;
-                box.appendChild(d);
-            });
-            const slides = box.children;
-            slides[0].classList.add('is-on');
-            if (slides.length < 2)
-                return;
-            let n = 0;
-            slideTimers.push(setInterval(() => {
-                slides[n].classList.remove('is-on');
-                n = (n + 1) % slides.length;
-                slides[n].classList.add('is-on');
-            }, 6000 + (i % 4) * 1000));
-        });
+        card.dataset.i = i;
+        slideIo.observe(card);
     });
 }
 
@@ -208,15 +235,46 @@ tabs.removeAttribute('role');
 pl.append(tabs, price);
 price.classList.add('pmain');
 
+const over = document.createElement('div');
+over.className = 'pover';
+document.body.appendChild(over);
+
 const MOBILE = 900;
 let panelOpen = false;
 
 const FT = {
-    ru: { filter: 'Фильтр', sections: 'Раздел', services: 'Услуги', extra: 'Кухня, бар', shop: 'Магазин', all: 'Все категории', modeList: 'Список', modePhoto: 'С фото' },
-    ky: { filter: 'Чыпка', sections: 'Бөлүм', services: 'Кызматтар', extra: 'Ашкана, бар', shop: 'Дүкөн', all: 'Бардык категориялар', modeList: 'Тизме', modePhoto: 'Сүрөт менен' },
-    en: { filter: 'Filter', sections: 'Section', services: 'Services', extra: 'Kitchen, bar', shop: 'Shop', all: 'All categories', modeList: 'List', modePhoto: 'With photos' },
+    ru: { filter: 'Фильтр', close: 'Закрыть', sections: 'Раздел', services: 'Услуги', extra: 'Кухня, бар', shop: 'Магазин', all: 'Все категории', modeList: 'Список', modePhoto: 'С фото' },
+    ky: { filter: 'Чыпка', close: 'Жабуу', sections: 'Бөлүм', services: 'Кызматтар', extra: 'Ашкана, бар', shop: 'Дүкөн', all: 'Бардык категориялар', modeList: 'Тизме', modePhoto: 'Сүрөт менен' },
+    en: { filter: 'Filter', close: 'Close', sections: 'Section', services: 'Services', extra: 'Kitchen, bar', shop: 'Shop', all: 'All categories', modeList: 'List', modePhoto: 'With photos' },
 };
 const ft = (k) => FT[lang][k];
+
+function syncPanel() {
+    const open = panelOpen && window.innerWidth <= MOBILE;
+    tabs.classList.toggle('is-open', open);
+    over.classList.toggle('is-open', open);
+    document.documentElement.classList.toggle('no-scroll', open);
+}
+
+function openPanel() {
+    panelOpen = true;
+    syncPanel();
+}
+
+function closePanel() {
+    panelOpen = false;
+    syncPanel();
+}
+
+over.addEventListener('click', closePanel);
+
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape')
+        return;
+    if (panelOpen)
+        closePanel();
+    setLangMenu(false);
+});
 
 function pricesTop() {
     return must('#prices').getBoundingClientRect().top + window.scrollY - SECTION_OFFSET;
@@ -256,13 +314,15 @@ list.addEventListener('click', (e) => {
     scrollToPrices();
 });
 
-const rowHtml = (it, i) => `<li style="--d:${Math.min(i, 8) * 40}ms"><span>${esc(nameOf(it))}</span><i></i><b>${priceText(it)}</b></li>`;
+const rowHtml = (it, i) => `<li style="--d:${Math.min(i, 8) * 30}ms"><span>${esc(nameOf(it))}</span><i></i><b>${priceText(it)}</b></li>`;
 
 function groupHtml(gr) {
     return `${gr.title ? `<h4 class="price__group">${gr.title}</h4>` : ''}<ul class="price__list">${gr.items.map(rowHtml).join('')}</ul>`;
 }
 
 const foodNum = new Map();
+const foodMiss = new Set();
+const foodHit = new Map();
 
 (function numberFood() {
     const kitchen = SECTIONS.find(s => s.id === 'kitchen');
@@ -277,8 +337,10 @@ const foodNum = new Map();
 
 function foodCandidates(item) {
     const n = foodNum.get(item);
-    if (!n)
+    if (!n || foodMiss.has(n))
         return [];
+    if (foodHit.has(n))
+        return [foodHit.get(n)];
     return FOOD_EXT.map(ext => `${FOOD_DIR}${FOOD_PREFIX}${n}.${ext}`);
 }
 
@@ -288,11 +350,18 @@ function foodErr(img) {
         img.dataset.fb = rest.slice(1).join('|');
         img.src = rest[0];
     } else {
+        foodMiss.add(Number(img.dataset.n));
+        foodHit.delete(Number(img.dataset.n));
         img.remove();
     }
 }
 
+function foodOk(img) {
+    foodHit.set(Number(img.dataset.n), img.getAttribute('src'));
+}
+
 window.foodErr = foodErr;
+window.foodOk = foodOk;
 
 window.foodFiles = function () {
     const rows = [];
@@ -313,9 +382,9 @@ function cardHtml(it, i) {
     const n = esc(nameOf(it));
     const c = foodCandidates(it);
     const img = c.length
-        ? `<img src="${esc(c[0])}" data-fb="${esc(c.slice(1).join('|'))}" alt="${n}" loading="lazy" decoding="async" onerror="foodErr(this)">`
+        ? `<img src="${esc(c[0])}" data-n="${foodNum.get(it)}" data-fb="${esc(c.slice(1).join('|'))}" alt="${n}" loading="lazy" decoding="async" onload="foodOk(this)" onerror="foodErr(this)">`
         : '';
-    return `<li class="fcard" style="--d:${Math.min(i, 10) * 35}ms">`
+    return `<li class="fcard" style="--d:${Math.min(i, 10) * 30}ms">`
         + `<div class="fcard__img">${FOOD_ICON}${img}</div>`
         + `<div class="fcard__body"><span class="fcard__name">${n}</span><b class="fcard__price">${priceText(it)}</b></div>`
         + `</li>`;
@@ -325,23 +394,15 @@ function photoGroupHtml(gr) {
     return `${gr.title ? `<h4 class="price__group">${gr.title}</h4>` : ''}<ul class="pgrid">${gr.items.map((it, i) => cardHtml(it, i)).join('')}</ul>`;
 }
 
-function modeBar() {
-    return `<div class="vmode" role="group">`
+function modeBar(cls) {
+    return `<div class="vmode ${cls}" role="group">`
         + `<button type="button" data-mode="list" class="${state.mode === 'list' ? 'is-on' : ''}">${ft('modeList')}</button>`
         + `<button type="button" data-mode="photo" class="${state.mode === 'photo' ? 'is-on' : ''}">${ft('modePhoto')}</button>`
         + `</div>`;
 }
 
-price.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-mode]');
-    if (!b || b.dataset.mode === state.mode)
-        return;
-    state.mode = b.dataset.mode;
-    renderPrices();
-    jumpToListTop();
-});
-
 const ICON_FILTER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
 function opt(attr, val, text, on, cls = '') {
     return `<button type="button" class="fopt${on ? ' is-on' : ''}${cls ? ' ' + cls : ''}" ${attr}="${val}"><span class="fopt__mark"></span><span>${text}</span></button>`;
@@ -366,9 +427,8 @@ function renderSide(secs, cur) {
     const keep = tabs.scrollTop;
 
     tabs.innerHTML =
-        `<button type="button" class="pside__toggle${panelOpen ? ' is-open' : ''}" data-ftoggle aria-expanded="${panelOpen}">`
-        + `${ICON_FILTER}<span>${ft('filter')}: ${cur.title}</span><i class="pside__arrow"></i></button>`
-        + `<div class="pside__panel${panelOpen ? ' is-open' : ''}">`
+        `<div class="pside__head"><span>${ft('filter')}</span><button type="button" class="pside__close" data-fclose aria-label="${ft('close')}">${ICON_CLOSE}</button></div>`
+        + `<div class="pside__panel">`
         + (main.length ? `<p class="fsub">${ft('services')}</p>${main.map(sec).join('')}` : '')
         + (extra.length ? `<p class="fsub">${ft('extra')}</p>${extra.map(sec).join('')}` : '')
         + (shop.length ? `<p class="fsub">${ft('shop')}</p>${shop.map(sec).join('')}` : '')
@@ -377,12 +437,25 @@ function renderSide(secs, cur) {
     tabs.scrollTop = keep;
 }
 
-tabs.addEventListener('click', (e) => {
-    if (e.target.closest('[data-ftoggle]')) {
-        panelOpen = !panelOpen;
-        return renderPrices(true);
+pl.addEventListener('click', (e) => {
+    const m = e.target.closest('[data-mode]');
+    if (m) {
+        if (m.dataset.mode === state.mode)
+            return;
+        state.mode = m.dataset.mode;
+        renderPrices();
+        jumpToListTop();
+        return;
     }
+    if (e.target.closest('[data-ftoggle]')) {
+        openPanel();
+        return;
+    }
+    if (e.target.closest('[data-fclose]'))
+        closePanel();
+});
 
+tabs.addEventListener('click', (e) => {
     const sec = e.target.closest('[data-fsec]');
     if (sec) {
         if (sec.dataset.fsec === state.section && state.group === null)
@@ -390,9 +463,10 @@ tabs.addEventListener('click', (e) => {
         const next = view(state.g).find(s => s.id === sec.dataset.fsec);
         state.section = sec.dataset.fsec;
         state.group = null;
-        if (window.innerWidth <= MOBILE && !(next && next.priceOnly && next.groups.length > 1))
+        if (!(next && next.priceOnly && next.groups.length > 1))
             panelOpen = false;
         renderPrices();
+        syncPanel();
         jumpToListTop();
         return;
     }
@@ -400,9 +474,9 @@ tabs.addEventListener('click', (e) => {
     const grp = e.target.closest('[data-fgrp]');
     if (grp) {
         state.group = grp.dataset.fgrp === '' ? null : Number(grp.dataset.fgrp);
-        if (window.innerWidth <= MOBILE)
-            panelOpen = false;
+        panelOpen = false;
         renderPrices();
+        syncPanel();
         jumpToListTop();
     }
 });
@@ -431,7 +505,7 @@ function splitCols(groups) {
     return [groups.slice(0, best), groups.slice(best)];
 }
 
-function renderPrices(keepAnim) {
+function renderPrices() {
     const secs = view(state.g);
     if (!secs.some(s => s.id === state.section)) {
         state.section = secs[0].id;
@@ -442,8 +516,6 @@ function renderPrices(keepAnim) {
         state.group = null;
 
     renderSide(secs, s);
-    if (keepAnim === true)
-        return;
 
     const isKitchen = s.id === 'kitchen';
     const photo = isKitchen && state.mode === 'photo';
@@ -459,8 +531,15 @@ function renderPrices(keepAnim) {
     } else {
         body = groups.map(groupHtml).join('');
     }
-    price.innerHTML = (isKitchen ? modeBar() : '')
-        + `<div class="price__card${photo ? ' pcard--photo' : ''}"${big ? ' data-big="1"' : ''}>${body}</div>`;
+    const bar = `<div class="pbar">`
+        + `<button type="button" class="pfilter" data-ftoggle aria-haspopup="dialog">${ICON_FILTER}<span>${s.title}</span><i class="pfilter__arrow"></i></button>`
+        + (isKitchen ? modeBar('vmode--bar') : '')
+        + `</div>`;
+    price.innerHTML = bar
+        + `<div class="price__card${photo ? ' pcard--photo' : ''}"${big ? ' data-big="1"' : ''}>`
+        + (isKitchen ? modeBar('vmode--card') : '')
+        + body
+        + `</div>`;
     swapAnim(price);
     fitPrices();
 }
@@ -490,10 +569,20 @@ function setLang(l) {
     fitSectionHeight();
 }
 
+langBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setLangMenu(!langBox.classList.contains('is-open'));
+});
+
 document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-lang]');
-    if (b)
+    if (b) {
         setLang(b.dataset.lang);
+        setLangMenu(false);
+        return;
+    }
+    if (!e.target.closest('#lang'))
+        setLangMenu(false);
 });
 
 function setGender(g, rerender = true) {
@@ -538,12 +627,19 @@ applyStatic();
 renderServices();
 renderPrices();
 
+let lastW = window.innerWidth;
 let resizeTimer = 0;
 window.addEventListener('resize', () => {
+    const w = window.innerWidth;
+    if (w > MOBILE && panelOpen)
+        closePanel();
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
         fitPrices();
-        fitSectionHeight();
+        if (w !== lastW) {
+            lastW = w;
+            fitSectionHeight();
+        }
     }, 150);
 });
 if (document.fonts && document.fonts.ready)
@@ -562,6 +658,7 @@ const nav = must('#nav');
 const head = must('#head');
 const toTop = must('#to-top');
 burger.addEventListener('click', () => {
+    setLangMenu(false);
     const open = nav.classList.toggle('is-open');
     burger.classList.toggle('is-open', open);
     burger.setAttribute('aria-expanded', String(open));
@@ -573,12 +670,6 @@ nav.addEventListener('click', (e) => {
         burger.setAttribute('aria-expanded', 'false');
     }
 });
-const onScroll = () => {
-    head.classList.toggle('is-scrolled', window.scrollY > 40);
-    toTop.classList.toggle('is-visible', window.scrollY > 600);
-};
-onScroll();
-window.addEventListener('scroll', onScroll, { passive: true });
 toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 document.querySelectorAll('.reveal').forEach(el => {
@@ -589,7 +680,7 @@ document.querySelectorAll('.reveal').forEach(el => {
 (function buildMotes() {
     const box = document.querySelector('.motes');
     if (!box) return;
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 12; i++) {
         const mote = document.createElement('i');
         mote.style.cssText =
             `left:${(Math.random() * 100).toFixed(1)}%;` +
@@ -599,6 +690,15 @@ document.querySelectorAll('.reveal').forEach(el => {
             `--dx:${((Math.random() - 0.5) * 120).toFixed(0)}px`;
         box.appendChild(mote);
     }
+})();
+
+(function watchHero() {
+    const hero = document.querySelector('.hero');
+    if (!hero)
+        return;
+    new IntersectionObserver(entries => {
+        hero.classList.toggle('is-off', !entries[0].isIntersecting);
+    }).observe(hero);
 })();
 
 function closeMobileNav() {
@@ -625,6 +725,7 @@ head.querySelector('.brand').addEventListener('click', (e) => {
 
 const spyLinks = [...document.querySelectorAll('.nav a[href^="#"], .mnav a[href^="#"]')];
 const spyIds = ['services', 'prices'];
+let lastSpy = null;
 
 function spy() {
     let cur = '';
@@ -633,8 +734,28 @@ function spy() {
         if (el && el.getBoundingClientRect().top <= 160)
             cur = id;
     });
+    if (cur === lastSpy)
+        return;
+    lastSpy = cur;
     spyLinks.forEach(a => a.classList.toggle('is-active', a.getAttribute('href') === '#' + cur));
 }
 
-spy();
-window.addEventListener('scroll', spy, { passive: true });
+let scrollTicking = false;
+
+function onScrollFrame() {
+    scrollTicking = false;
+    const y = window.scrollY;
+    head.classList.toggle('is-scrolled', y > 40);
+    toTop.classList.toggle('is-visible', y > 600);
+    spy();
+}
+
+function onScroll() {
+    if (scrollTicking)
+        return;
+    scrollTicking = true;
+    requestAnimationFrame(onScrollFrame);
+}
+
+onScrollFrame();
+window.addEventListener('scroll', onScroll, { passive: true });

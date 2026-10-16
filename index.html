@@ -76,10 +76,15 @@
                 <a href="#prices" data-i18n="navPrices">Прайс</a>
             </nav>
             <div class="header__tools">
-                <div class="lang" role="group" data-i18n-aria="langAria" aria-label="Язык">
-                    <button type="button" data-lang="ru">RU</button>
-                    <button type="button" data-lang="ky">КЫР</button>
-                    <button type="button" data-lang="en">EN</button>
+                <div class="lang" id="lang">
+                    <button class="lang__btn" id="lang-btn" type="button" aria-haspopup="true" aria-expanded="false" data-i18n-aria="langAria" aria-label="Язык">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.8 2.6 4.2 5.6 4.2 9s-1.4 6.4-4.2 9c-2.8-2.6-4.2-5.6-4.2-9S9.2 5.6 12 3z"/></svg>
+                    </button>
+                    <div class="lang__menu" id="lang-menu" role="group" data-i18n-aria="langAria" aria-label="Язык">
+                        <button type="button" data-lang="ru"><span class="l-short">RU</span><span class="l-full">Русский</span></button>
+                        <button type="button" data-lang="ky"><span class="l-short">КЫР</span><span class="l-full">Кыргызча</span></button>
+                        <button type="button" data-lang="en"><span class="l-short">EN</span><span class="l-full">English</span></button>
+                    </div>
                 </div>
                 <button class="burger" id="burger" type="button" data-i18n-aria="burgerAria" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span><span></span></button>
             </div>

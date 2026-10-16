@@ -3,35 +3,23 @@ html.no-scroll {
 }
 
 #prices {
-    position: relative;
-}
-
-#prices::before,
-#prices::after {
-    content: '';
-    position: absolute;
-    z-index: 0;
-    width: clamp(180px, 27vw, 380px);
-    aspect-ratio: 1 / 1;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='100 0 850 850' fill='none' stroke='%23a8692a' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='matrix(1 0 0 -1 0 720)'%3E%3Cpath d='M152 -110V410' stroke-width='8'/%3E%3Cpath d='M152 410C178 415 192 445 182 478C175 498 158 505 128 497' stroke-width='10'/%3E%3Cpath d='M152 414C138 420 132 432 140 444' stroke-width='9'/%3E%3Cpath d='M205 598C206 612 220 624 234 622C256 620 274 604 272 582C270 545 240 513 205 513C158 513 122 548 122 600C122 655 158 697 205 697C245 697 280 685 306 668' stroke-width='13'/%3E%3Ccircle cx='205' cy='598' r='11' fill='%23a8692a' stroke='none'/%3E%3Cpath d='M306 668C298 652 302 638 314 636' stroke-width='9'/%3E%3Cpath d='M318 672C335 654 365 652 388 668C396 674 400 678 404 681' stroke-width='9'/%3E%3Cpath d='M400 681H930' stroke-width='8'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
-    opacity: 0.5;
-    pointer-events: none;
-}
-
-#prices::before {
-    top: 18px;
-    left: 2%;
-}
-
-#prices::after {
-    right: 2%;
-    bottom: 18px;
-    transform: rotate(180deg);
-}
-
-#prices > .wrap {
-    position: relative;
-    z-index: 1;
+    background-color: var(--paper-2);
+    background-repeat: no-repeat;
+    background-image:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 14'%3E%3Cg fill='%23a8692a' opacity='0.7'%3E%3Cpath d='M14 0.5L20.5 7L14 13.5L7.5 7Z'/%3E%3Cpath d='M3.5 5.2L5.3 7L3.5 8.8L1.7 7Z'/%3E%3Cpath d='M24.5 5.2L26.3 7L24.5 8.8L22.7 7Z'/%3E%3C/g%3E%3C/svg%3E"),
+            linear-gradient(90deg, rgba(168, 105, 42, 0.55) 0, rgba(168, 105, 42, 0.55) calc(50% - 24px), transparent calc(50% - 24px), transparent calc(50% + 24px), rgba(168, 105, 42, 0.55) calc(50% + 24px), rgba(168, 105, 42, 0.55) 100%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='100 0 850 850' fill='none' stroke='%23a8692a' stroke-linecap='round' stroke-linejoin='round' opacity='0.5'%3E%3Cg transform='matrix(1 0 0 -1 0 720)'%3E%3Cpath d='M152 -110V410' stroke-width='8'/%3E%3Cpath d='M152 410C178 415 192 445 182 478C175 498 158 505 128 497' stroke-width='10'/%3E%3Cpath d='M152 414C138 420 132 432 140 444' stroke-width='9'/%3E%3Cpath d='M205 598C206 612 220 624 234 622C256 620 274 604 272 582C270 545 240 513 205 513C158 513 122 548 122 600C122 655 158 697 205 697C245 697 280 685 306 668' stroke-width='13'/%3E%3Ccircle cx='205' cy='598' r='11' fill='%23a8692a' stroke='none'/%3E%3Cpath d='M306 668C298 652 302 638 314 636' stroke-width='9'/%3E%3Cpath d='M318 672C335 654 365 652 388 668C396 674 400 678 404 681' stroke-width='9'/%3E%3Cpath d='M400 681H930' stroke-width='8'/%3E%3C/g%3E%3C/svg%3E"),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='100 0 850 850' fill='none' stroke='%23a8692a' stroke-linecap='round' stroke-linejoin='round' opacity='0.5'%3E%3Cg transform='matrix(-1 0 0 -1 1050 720)'%3E%3Cpath d='M152 -110V410' stroke-width='8'/%3E%3Cpath d='M152 410C178 415 192 445 182 478C175 498 158 505 128 497' stroke-width='10'/%3E%3Cpath d='M152 414C138 420 132 432 140 444' stroke-width='9'/%3E%3Cpath d='M205 598C206 612 220 624 234 622C256 620 274 604 272 582C270 545 240 513 205 513C158 513 122 548 122 600C122 655 158 697 205 697C245 697 280 685 306 668' stroke-width='13'/%3E%3Ccircle cx='205' cy='598' r='11' fill='%23a8692a' stroke='none'/%3E%3Cpath d='M306 668C298 652 302 638 314 636' stroke-width='9'/%3E%3Cpath d='M318 672C335 654 365 652 388 668C396 674 400 678 404 681' stroke-width='9'/%3E%3Cpath d='M400 681H930' stroke-width='8'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:
+            28px 14px,
+            84% 2px,
+            clamp(180px, 27vw, 380px) clamp(180px, 27vw, 380px),
+            clamp(180px, 27vw, 380px) clamp(180px, 27vw, 380px);
+    background-position:
+            center bottom 28px,
+            center bottom 34px,
+            left 2vw top 18px,
+            right 2vw top 18px;
 }
 
 .pl {
@@ -340,19 +328,17 @@ html.no-scroll {
 }
 
 @media (max-width: 900px) {
-    #prices::before,
-    #prices::after {
-        width: clamp(130px, 36vw, 220px);
-    }
-
-    #prices::before {
-        top: 12px;
-        left: 1%;
-    }
-
-    #prices::after {
-        right: 1%;
-        bottom: 12px;
+    #prices {
+        background-size:
+                28px 14px,
+                84% 2px,
+                clamp(130px, 36vw, 220px) clamp(130px, 36vw, 220px),
+                clamp(130px, 36vw, 220px) clamp(130px, 36vw, 220px);
+        background-position:
+                center bottom 28px,
+                center bottom 34px,
+                left 1vw top 12px,
+                right 1vw top 12px;
     }
 
     .pl {

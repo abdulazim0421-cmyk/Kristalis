@@ -197,13 +197,14 @@ html.no-scroll {
 
 .pgrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
     margin-top: 16px;
     padding-bottom: 10px;
 }
 
 .fcard {
+    min-width: 0;
     overflow: hidden;
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -272,6 +273,22 @@ html.no-scroll {
 @media (min-width: 901px) and (max-width: 1100px) {
     .pcols {
         display: block;
+    }
+
+    .pgrid {
+        gap: 12px;
+    }
+
+    .fcard__body {
+        padding: 10px 11px 12px;
+    }
+
+    .fcard__name {
+        font-size: 14px;
+    }
+
+    .fcard__price {
+        font-size: 15px;
     }
 }
 

@@ -31,11 +31,6 @@
     height: 0;
 }
 
-.pside::-webkit-scrollbar-thumb {
-    border-radius: 3px;
-    background: rgba(168, 105, 42, 0.5);
-}
-
 .pside__toggle { display: none; }
 
 .fsub {
@@ -196,6 +191,7 @@
         grid-template-columns: 250px minmax(0, 1fr);
         gap: 24px;
     }
+
     .pside { padding: 8px 16px 14px; }
     .pl .price__card.is-compact { padding: 6px 22px 8px; }
     .pcols.is-two { column-gap: 30px; }
@@ -261,4 +257,87 @@
     }
 
     .pside__panel.is-open { display: block; }
+}
+
+@media (min-width: 901px) {
+    html {
+        scroll-snap-type: y proximity;
+    }
+
+    #prices {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100svh;
+        padding: 96px 0 24px;
+        overflow: hidden;
+        scroll-snap-align: start;
+        scroll-snap-stop: normal;
+        scroll-margin-top: 0;
+    }
+
+    #prices > .wrap {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    #prices .title {
+        margin-bottom: 4px;
+        font-size: clamp(24px, 3vw, 36px);
+    }
+
+    #prices .lead {
+        margin: 0 auto 6px;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    #prices .gender {
+        margin-top: 8px;
+        padding: 4px;
+    }
+
+    #prices .gender button {
+        padding: 9px 30px;
+        font-size: 17px;
+    }
+
+    #prices .pl {
+        flex: 1 1 0;
+        width: 100%;
+        min-height: 0;
+        margin: 18px auto 0;
+        grid-template-rows: minmax(0, 1fr);
+        align-items: stretch;
+    }
+
+    #prices .pside {
+        position: static;
+        align-self: start;
+        max-height: 100%;
+    }
+
+    #prices .pmain {
+        height: 100%;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    #prices .pmain::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+
+    #prices .pmain .price__card {
+        margin-bottom: 0;
+    }
 }

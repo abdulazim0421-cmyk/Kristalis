@@ -215,24 +215,54 @@ const FT = {
 const ft = (k) => FT[lang][k];
 
 function scrollToPrices() {
-    const top = must('#prices .title').getBoundingClientRect().top + window.scrollY - 80;
+    const box = must('#prices');
+    const top = window.innerWidth > MOBILE
+        ? box.getBoundingClientRect().top + window.scrollY
+        : must('#prices .title').getBoundingClientRect().top + window.scrollY - 80;
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
 }
 
 function jumpToListTop() {
+    price.scrollTop = 0;
+    if (window.innerWidth > MOBILE) {
+        const top = must('#prices').getBoundingClientRect().top + window.scrollY;
+        if (Math.abs(window.scrollY - top) > 2)
+            window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+        return;
+    }
     const top = pl.getBoundingClientRect().top + window.scrollY - HEADER_GAP;
     if (window.scrollY > top)
         window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
 }
 
-function fitPrices() {
-    const card = price.querySelector('.price__card');
-    if (!card)
+function renderPrices(keepAnim) {
+    const secs = view(state.g);
+    if (!secs.some(s => s.id === state.section)) {
+        state.section = secs[0].id;
+        state.group = null;
+    }
+    const s = secs.find(x => x.id === state.section);
+    if (state.group !== null && !s.groups[state.group])
+        state.group = null;
+
+    renderSide(secs, s);
+    if (keepAnim === true)
         return;
-    card.classList.toggle('is-compact', !!card.dataset.big);
-    const cols = card.querySelector('.pcols');
-    if (cols)
-        cols.classList.toggle('is-two', card.clientWidth >= TWO_COLS_MIN);
+
+    const groups = state.group === null ? s.groups : [s.groups[state.group]];
+    const total = groups.reduce((n, gr) => n + gr.items.length, 0);
+    const big = total > 14;
+    let body;
+    if (big) {
+        const [a, b] = splitCols(groups);
+        body = `<div class="pcols"><div class="pcol">${a.map(groupHtml).join('')}</div><div class="pcol">${b.map(groupHtml).join('')}</div></div>`;
+    } else {
+        body = groups.map(groupHtml).join('');
+    }
+    price.scrollTop = 0;
+    price.innerHTML = `<div class="price__card"${big ? ' data-big="1"' : ''}>${body}</div>`;
+    swapAnim(price);
+    fitPrices();
 }
 
 list.addEventListener('click', (e) => {

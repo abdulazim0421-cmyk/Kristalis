@@ -233,6 +233,14 @@ function fitPrices() {
     card.classList.toggle('is-compact', !!card.dataset.big);
 }
 
+function fitSectionHeight() {
+    const sec = must('#prices');
+    const foot = must('.footer');
+    const pad = parseFloat(getComputedStyle(sec).paddingTop) || 0;
+    const h = window.innerHeight - foot.offsetHeight + pad - 80;
+    sec.style.minHeight = Math.max(0, h) + 'px';
+}
+
 list.addEventListener('click', (e) => {
     const go = e.target.closest('[data-go]');
     if (!go)
@@ -390,6 +398,7 @@ function setLang(l) {
     applyStatic();
     renderServices();
     renderPrices();
+    fitSectionHeight();
 }
 
 document.addEventListener('click', (e) => {
@@ -443,11 +452,21 @@ renderPrices();
 let resizeTimer = 0;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(fitPrices, 150);
+    resizeTimer = setTimeout(() => {
+        fitPrices();
+        fitSectionHeight();
+    }, 150);
 });
 if (document.fonts && document.fonts.ready)
-    document.fonts.ready.then(fitPrices);
-window.addEventListener('load', fitPrices);
+    document.fonts.ready.then(() => {
+        fitPrices();
+        fitSectionHeight();
+    });
+window.addEventListener('load', () => {
+    fitPrices();
+    fitSectionHeight();
+});
+fitSectionHeight();
 
 const burger = must('#burger');
 const nav = must('#nav');

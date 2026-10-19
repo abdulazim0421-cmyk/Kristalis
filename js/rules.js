@@ -202,6 +202,7 @@
     const cur = () => (T[root.lang] ? root.lang : 'ru');
     const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+    let mlang = 'ru';
     let okMem = false;
     let pending = null;
     let lastFocus = null;
@@ -226,7 +227,7 @@
     const LOGO =
         '<svg class="rm__logo" width="52" height="52" viewBox="0 0 48 48" aria-hidden="true">'
         + '<defs><linearGradient id="kr-gold-rm" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="48" y2="48">'
-        + '<stop offset="0" stop-color="#c9904a"/><stop offset="0.35" stop-color="#fff1cf"/><stop offset="0.65" stop-color="#f0c27a"/><stop offset="1" stop-color="#c9904a"/>'
+        + '<stop offset="0" stop-color="#8a5220"/><stop offset="0.35" stop-color="#c9904a"/><stop offset="0.65" stop-color="#a8692a"/><stop offset="1" stop-color="#8a5220"/>'
         + '</linearGradient></defs>'
         + '<circle cx="24" cy="24" r="22.5" fill="none" stroke="url(#kr-gold-rm)" stroke-width="1.1"/>'
         + '<g fill="url(#kr-gold-rm)" stroke="url(#kr-gold-rm)" stroke-linecap="round" stroke-linejoin="round">'
@@ -251,9 +252,9 @@
         + '<div class="rm__head"><h2 class="rm__title" id="rm-title"></h2><p class="rm__sub"></p></div>'
         + '<button type="button" class="rm__x" data-rm-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>'
         + '<div class="rm__langs" role="group">'
-        + '<button type="button" data-lang="ru">Русский</button>'
-        + '<button type="button" data-lang="ky">Кыргызча</button>'
-        + '<button type="button" data-lang="en">English</button>'
+        + '<button type="button" data-rm-lang="ru">Русский</button>'
+        + '<button type="button" data-rm-lang="ky">Кыргызча</button>'
+        + '<button type="button" data-rm-lang="en">English</button>'
         + '</div>'
         + '</div>'
         + '<div class="rm__body"></div>'
@@ -284,7 +285,10 @@
     });
 
     function renderModal() {
-        const t = T[cur()];
+        const t = T[mlang];
+        modal.querySelectorAll('[data-rm-lang]').forEach(b => {
+            b.classList.toggle('is-active', b.dataset.rmLang === mlang);
+        });
         modal.querySelector('.rm__title').textContent = t.title;
         modal.querySelector('.rm__sub').textContent = t.sub;
         modal.querySelector('.rm__x').setAttribute('aria-label', t.close);
@@ -330,6 +334,7 @@
 
     function open() {
         lastFocus = document.activeElement;
+        mlang = cur();
         chk.checked = false;
         okBtn.disabled = true;
         renderAll();
@@ -363,6 +368,12 @@
     });
 
     document.addEventListener('click', (e) => {
+        const lb = e.target.closest('[data-rm-lang]');
+        if (lb) {
+            mlang = lb.dataset.rmLang;
+            renderModal();
+            return;
+        }
         if (e.target.closest('[data-rules-open]')) {
             e.preventDefault();
             pending = null;

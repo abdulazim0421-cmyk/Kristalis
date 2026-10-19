@@ -1,24 +1,29 @@
 "use strict";
 
-const VERSION = 'kr-v2';
+const VERSION = 'kr-v3';
 const CORE = `${VERSION}-core`;
 const MEDIA = `${VERSION}-media`;
+const MEDIA_LIMIT = 80;
+const NETWORK_TIMEOUT = 5000;
 
 const PRECACHE = [
     './',
     'index.html',
     'css/style.css?v=5',
     'css/extra.css?v=5',
+    'css/rules.css?v=1',
     'js/data.js',
     'js/data-extra.js',
     'js/menu-i18n.js',
     'js/app.js',
+    'js/rules.js',
+    'js/boot.js',
     'manifest.webmanifest',
     'icons/icon-192.png',
     'icons/icon-512.png',
+    'img/hero.jpg',
+    'img/hero-portrait.jpg',
 ];
-
-const NETWORK_TIMEOUT = 5000;
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
@@ -45,50 +50,72 @@ function fetchWithTimeout(req, ms) {
     return fetch(req, opts).finally(() => clearTimeout(timer));
 }
 
-async function networkFirst(req) {
+async function networkFirst(event, req) {
     const cache = await caches.open(CORE);
     try {
         const res = await fetchWithTimeout(req, NETWORK_TIMEOUT);
-        if (res && res.ok)
-            cache.put(req, res.clone());
+        if (res && res.status === 200)
+            event.waitUntil(cache.put(req, res.clone()));
         return res;
     } catch (err) {
         const hit = (await cache.match(req))
             || (req.mode === 'navigate' ? (await cache.match('index.html')) || (await cache.match('./')) : null);
-        if (hit)
-            return hit;
-        throw err;
+        return hit || Response.error();
     }
 }
 
-async function staleWhileRevalidate(req) {
+async function mediaFetch(req) {
+    if (new URL(req.url).origin === self.location.origin)
+        return fetch(req);
+    try {
+        return await fetch(new Request(req.url, { mode: 'cors', credentials: 'omit' }));
+    } catch (err) {
+        return fetch(req);
+    }
+}
+
+async function trimCache(cache, limit) {
+    const keys = await cache.keys();
+    if (keys.length > limit)
+        await Promise.all(keys.slice(0, keys.length - limit).map((k) => cache.delete(k)));
+}
+
+async function staleWhileRevalidate(event, req) {
     const cache = await caches.open(MEDIA);
-    const cached = await cache.match(req);
-    const net = fetch(req)
-        .then((res) => {
-            if (res && (res.ok || res.type === 'opaque'))
-                cache.put(req, res.clone());
+    const cached = await cache.match(req, { ignoreVary: true });
+    const update = mediaFetch(req)
+        .then(async (res) => {
+            if (res && res.status === 200) {
+                await cache.put(req, res.clone());
+                await trimCache(cache, MEDIA_LIMIT);
+            }
             return res;
         })
         .catch(() => null);
-    return cached || (await net) || Response.error();
+    if (cached) {
+        event.waitUntil(update);
+        return cached;
+    }
+    return (await update) || Response.error();
 }
 
 self.addEventListener('fetch', (event) => {
     const req = event.request;
-    if (req.method !== 'GET')
+    if (req.method !== 'GET' || req.headers.has('range'))
         return;
 
     const url = new URL(req.url);
     const sameOrigin = url.origin === self.location.origin;
     const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
-    if (!sameOrigin && !isFont)
+    const isImage = req.destination === 'image';
+
+    if (!sameOrigin && !isFont && !isImage)
         return;
 
-    if (isFont || req.destination === 'image') {
-        event.respondWith(staleWhileRevalidate(req));
+    if (isFont || isImage) {
+        event.respondWith(staleWhileRevalidate(event, req));
         return;
     }
 
-    event.respondWith(networkFirst(req));
+    event.respondWith(networkFirst(event, req));
 });

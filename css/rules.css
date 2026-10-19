@@ -528,16 +528,16 @@ body {
 @media (max-width: 640px) {
     .rm {
         align-items: flex-end;
-        padding: 0;
+        padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px));
     }
 
     .rm__box {
         width: 100%;
-        max-height: 92vh;
-        max-height: calc(100dvh - 24px);
-        border-radius: 22px 22px 0 0;
+        max-height: 78vh;
+        max-height: 78dvh;
+        border-radius: 24px;
         opacity: 1;
-        transform: translateY(100%);
+        transform: translateY(calc(100% + 40px));
         transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -545,83 +545,165 @@ body {
         transform: none;
     }
 
-    .rm__box::before {
-        content: '';
-        position: absolute;
-        top: 8px;
-        left: 50%;
-        z-index: 3;
-        width: 42px;
-        height: 4px;
-        border-radius: 4px;
-        background: rgba(42, 26, 15, 0.25);
-        transform: translateX(-50%);
-    }
-
     .rm__top {
-        gap: 10px 12px;
-        padding: 24px 58px 12px 16px;
+        gap: 8px 10px;
+        padding: 16px 52px 10px 14px;
     }
 
     .rm__top::after {
-        right: 16px;
-        left: 16px;
+        right: 14px;
+        left: 14px;
     }
 
     .rm__logo {
-        width: 40px;
-        height: 40px;
+        width: 34px;
+        height: 34px;
     }
 
     .rm__head {
-        margin-right: 8px;
+        margin-right: 6px;
     }
 
     .rm__title {
-        font-size: 22px;
+        font-size: 19px;
+        letter-spacing: 0.06em;
     }
 
     .rm__sub {
-        margin-top: 4px;
-        font-size: 14px;
+        margin-top: 3px;
+        font-size: 12.5px;
+        line-height: 1.3;
     }
 
     .rm__langs {
-        margin-right: -42px;
+        gap: 6px;
+        margin-right: -38px;
     }
 
     .rm__langs button {
         flex: 1;
         min-width: 0;
-        padding: 8px 6px;
-    }
-
-    .rm__list li {
-        font-size: 16px;
+        padding: 7px 4px;
+        font-size: 12px;
+        letter-spacing: 0.03em;
     }
 
     .rm__x {
-        top: 18px;
-        right: 14px;
+        top: 12px;
+        right: 12px;
+        width: 34px;
+        height: 34px;
+    }
+
+    .rm__x svg {
+        width: 16px;
+        height: 16px;
     }
 
     .rm__body {
-        padding: 2px 16px 24px;
+        padding: 0 14px 16px;
+    }
+
+    .rm__sec {
+        margin-top: 14px;
     }
 
     .rm__sec h3 {
-        font-size: 19px;
+        gap: 10px;
+        font-size: 16px;
+        letter-spacing: 0.04em;
+    }
+
+    .rm__list li {
+        padding: 9px 0 9px 32px;
+        font-size: 14.5px;
+        line-height: 1.4;
+    }
+
+    .rm__list li::before,
+    .rm__list li::after {
+        top: 10px;
+        left: 1px;
+        width: 20px;
+        height: 20px;
+    }
+
+    .rm__list li::before {
+        border-width: 1.5px;
+    }
+
+    .rm__list li::after {
+        font-size: 12px;
+    }
+
+    .rm__depth {
+        margin-top: 6px;
+        padding: 10px 14px;
+        border-radius: 12px;
+    }
+
+    .rm__depth span {
+        font-size: 12px;
+    }
+
+    .rm__depth b {
+        font-size: 26px;
     }
 
     .rm__foot {
         flex-direction: column;
         align-items: stretch;
+        gap: 8px;
+        padding: 10px 14px 14px;
+    }
+
+    .rm__check {
         gap: 10px;
-        padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+        min-height: 40px;
+        font-size: 14px;
+    }
+
+    .rm__mark {
+        flex-basis: 26px;
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+    }
+
+    .rm__mark::after {
+        top: 3px;
+        left: 8px;
+        width: 6px;
+        height: 11px;
+        border-right-width: 2.5px;
+        border-bottom-width: 2.5px;
     }
 
     .rm__ok {
         width: 100%;
-        padding: 16px 20px;
+        padding: 13px 20px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 360px) {
+    .rm__title {
+        font-size: 17px;
+    }
+
+    .rm__sub {
+        font-size: 11.5px;
+    }
+
+    .rm__langs button {
+        font-size: 11px;
+    }
+
+    .rm__list li {
+        font-size: 13.5px;
+    }
+
+    .rm__check {
+        font-size: 13px;
     }
 }

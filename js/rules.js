@@ -271,9 +271,9 @@
 
     const info = document.createElement('div');
     info.className = 'kinfo';
-    const lead = document.querySelector('#prices .lead');
-    if (lead)
-        lead.after(info);
+    const pricesWrap = document.querySelector('#prices .wrap');
+    if (pricesWrap)
+        pricesWrap.appendChild(info);
 
     document.querySelectorAll('.nav, .mnav').forEach(n => {
         const a = document.createElement('a');

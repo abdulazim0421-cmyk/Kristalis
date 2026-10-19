@@ -1,6 +1,31 @@
 "use strict";
 
 (() => {
+    const block = (e) => e.preventDefault();
+
+    ["gesturestart", "gesturechange", "gestureend"].forEach(name => {
+        document.addEventListener(name, block, { passive: false });
+    });
+
+    ["touchstart", "touchmove"].forEach(name => {
+        document.addEventListener(name, (e) => {
+            if (e.touches.length > 1)
+                e.preventDefault();
+        }, { passive: false });
+    });
+
+    window.addEventListener("wheel", (e) => {
+        if (e.ctrlKey)
+            e.preventDefault();
+    }, { passive: false });
+
+    window.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && ["+", "-", "=", "_", "0"].includes(e.key))
+            e.preventDefault();
+    });
+})();
+
+(() => {
     if (!("serviceWorker" in navigator))
         return;
 

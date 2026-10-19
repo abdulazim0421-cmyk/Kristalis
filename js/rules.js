@@ -8,7 +8,7 @@
         ru: {
             link: 'Правила',
             title: 'Правила посещения',
-            sub: 'Прочитайте, пожалуйста, перед выбором услуг. Это займёт минуту.',
+            sub: 'Важно! Обязательно ознакомьтесь с правилами',
             close: 'Закрыть',
             check: 'Я прочитал(а) правила и согласен(на)',
             ok: 'Ознакомился',
@@ -72,7 +72,7 @@
         ky: {
             link: 'Эрежелер',
             title: 'Келүү эрежелери',
-            sub: 'Кызматтарды тандаардан мурун окуп чыгыңыз. Бир мүнөт алат.',
+            sub: 'Маанилүү! Эрежелер менен сөзсүз таанышып чыгыңыз',
             close: 'Жабуу',
             check: 'Эрежелерди окудум жана макулмун',
             ok: 'Таанышып чыктым',
@@ -136,7 +136,7 @@
         en: {
             link: 'Rules',
             title: 'Visitor rules',
-            sub: 'Please read before choosing services. It takes a minute.',
+            sub: 'Important! Please read the rules carefully',
             close: 'Close',
             check: 'I have read the rules and agree',
             ok: 'I have read it',

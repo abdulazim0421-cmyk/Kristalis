@@ -1,7 +1,6 @@
 "use strict";
 
 (() => {
-    const KEY = 'kr-rules-v1';
     const root = document.documentElement;
 
     const T = {
@@ -200,29 +199,14 @@
     };
 
     const cur = () => (T[root.lang] ? root.lang : 'ru');
-    const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
     let mlang = 'ru';
-    let okMem = false;
+    let accepted = false;
     let pending = null;
     let lastFocus = null;
 
-    const isOk = () => {
-        if (okMem)
-            return true;
-        try {
-            return sessionStorage.getItem(KEY) === '1';
-        } catch (e) {
-            return false;
-        }
-    };
-
-    const setOk = () => {
-        okMem = true;
-        try {
-            sessionStorage.setItem(KEY, '1');
-        } catch (e) {}
-    };
+    const isOk = () => accepted;
 
     const LOGO =
         '<svg class="rm__logo" width="52" height="52" viewBox="0 0 48 48" aria-hidden="true">'
@@ -269,6 +253,7 @@
     const body = modal.querySelector('.rm__body');
     const chk = modal.querySelector('input');
     const okBtn = modal.querySelector('.rm__ok');
+    const xBtn = modal.querySelector('.rm__x');
 
     const info = document.createElement('div');
     info.className = 'kinfo';
@@ -291,14 +276,14 @@
         });
         modal.querySelector('.rm__title').textContent = t.title;
         modal.querySelector('.rm__sub').textContent = t.sub;
-        modal.querySelector('.rm__x').setAttribute('aria-label', t.close);
+        xBtn.setAttribute('aria-label', t.close);
         modal.querySelector('.rm__ctext').textContent = t.check;
         okBtn.textContent = t.ok;
         body.innerHTML = t.secs.map(s => {
             const depth = s.depth
                 ? `<div class="rm__depth"><span>${esc(t.depth)}</span><b>${esc(t.depthVal)}</b></div>`
                 : '';
-            const items = s.items.map(i => `<li class="is-${i[0]}">${esc(i[1])}</li>`).join('');
+            const items = s.items.map(i => `<li class="is-${esc(i[0])}">${esc(i[1])}</li>`).join('');
             return `<section class="rm__sec"><h3>${esc(s.h)}</h3><ul class="rm__list">${items}</ul>${depth}</section>`;
         }).join('');
     }
@@ -337,6 +322,7 @@
         mlang = cur();
         chk.checked = false;
         okBtn.disabled = true;
+        xBtn.style.display = isOk() ? '' : 'none';
         renderAll();
         body.scrollTop = 0;
         modal.classList.add('is-open');
@@ -360,12 +346,30 @@
     okBtn.addEventListener('click', () => {
         if (!chk.checked)
             return;
-        setOk();
+        accepted = true;
         const next = pending;
         close();
         if (next)
             setTimeout(() => next.click(), 280);
     });
+
+    document.addEventListener('pointerdown', (e) => {
+        if (isOk() || modal.contains(e.target) || modal.classList.contains('is-open'))
+            return;
+        open();
+        pending = e.target.closest ? e.target.closest('[data-g]') : null;
+    }, true);
+
+    document.addEventListener('click', (e) => {
+        if (isOk() || modal.contains(e.target))
+            return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (!modal.classList.contains('is-open')) {
+            open();
+            pending = e.target.closest('[data-g]');
+        }
+    }, true);
 
     document.addEventListener('click', (e) => {
         const lb = e.target.closest('[data-rm-lang]');
@@ -380,22 +384,12 @@
             open();
             return;
         }
-        if (e.target === modal || e.target.closest('[data-rm-close]'))
+        if (isOk() && (e.target === modal || e.target.closest('[data-rm-close]')))
             close();
     });
 
-    document.addEventListener('click', (e) => {
-        const el = e.target.closest('[data-g]');
-        if (!el || isOk())
-            return;
-        e.preventDefault();
-        e.stopPropagation();
-        open();
-        pending = el;
-    }, true);
-
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('is-open'))
+        if (e.key === 'Escape' && modal.classList.contains('is-open') && isOk())
             close();
     });
 

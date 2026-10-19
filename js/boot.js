@@ -26,29 +26,36 @@
 })();
 
 (() => {
-    if (!("serviceWorker" in navigator))
-        return;
-
     const IDLE_MS = 120000;
+    const CHECK_MS = 5000;
     const UPDATE_MS = 3600000;
-    let lastTouch = Date.now();
-    let reloadWanted = false;
-    let hadController = !!navigator.serviceWorker.controller;
 
-    ["pointerdown", "keydown", "scroll"].forEach(name => {
+    let lastTouch = Date.now();
+    let dirty = false;
+    let updateReady = false;
+    let hadController = "serviceWorker" in navigator && !!navigator.serviceWorker.controller;
+
+    if ("scrollRestoration" in history)
+        history.scrollRestoration = "manual";
+
+    ["pointerdown", "touchstart", "keydown", "scroll"].forEach(name => {
         window.addEventListener(name, () => {
             lastTouch = Date.now();
+            dirty = true;
         }, { passive: true, capture: true });
     });
 
     setInterval(() => {
-        if (reloadWanted && Date.now() - lastTouch > IDLE_MS)
-            location.reload();
-    }, 10000);
+        if ((dirty || updateReady) && Date.now() - lastTouch > IDLE_MS)
+            location.replace(location.pathname);
+    }, CHECK_MS);
+
+    if (!("serviceWorker" in navigator))
+        return;
 
     navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (hadController)
-            reloadWanted = true;
+            updateReady = true;
         hadController = true;
     });
 

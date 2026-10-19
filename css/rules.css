@@ -5,7 +5,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2vh 20px;
+    padding: 20px;
     background: rgba(18, 10, 5, 0.72);
     opacity: 0;
     visibility: hidden;
@@ -22,9 +22,8 @@
 .rm__box {
     display: flex;
     flex-direction: column;
-    width: min(880px, 100%);
-    height: min(96vh, 1700px);
-    height: min(96dvh, 1700px);
+    width: min(760px, 100%);
+    max-height: min(92vh, 900px);
     overflow: hidden;
     border-radius: var(--radius);
     background: var(--paper);
@@ -44,7 +43,6 @@
 .rm__top {
     position: relative;
     display: flex;
-    flex: 0 0 auto;
     flex-wrap: wrap;
     align-items: center;
     gap: 14px 18px;
@@ -81,7 +79,7 @@
     color: transparent;
     -webkit-text-fill-color: transparent;
     font-family: var(--font-head);
-    font-size: clamp(24px, min(3.6vw, 4.2vh), 46px);
+    font-size: clamp(24px, 3.6vw, 36px);
     font-weight: 400;
     letter-spacing: 0.08em;
     line-height: 1.15;
@@ -91,7 +89,7 @@
 .rm__sub {
     margin-top: 4px;
     color: rgba(246, 234, 215, 0.8);
-    font-size: clamp(14px, 1.7vh, 22px);
+    font-size: 14px;
     line-height: 1.5;
 }
 
@@ -105,12 +103,12 @@
 
 .rm__langs button {
     min-width: 110px;
-    padding: clamp(9px, 1.1vh, 14px) 18px;
+    padding: 9px 18px;
     border: 1px solid rgba(246, 234, 215, 0.4);
     border-radius: 999px;
     background: transparent;
     color: var(--cream);
-    font-size: clamp(13px, 1.6vh, 19px);
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.06em;
     line-height: 1.2;
@@ -157,12 +155,9 @@
 }
 
 .rm__body {
-    display: flex;
     flex: 1;
-    flex-direction: column;
-    justify-content: space-evenly;
     min-height: 0;
-    padding: 8px 28px 12px;
+    padding: 6px 26px 40px;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: none;
@@ -176,8 +171,7 @@
 }
 
 .rm__sec {
-    flex: 0 0 auto;
-    padding-block: 10px;
+    margin-top: 24px;
 }
 
 .rm__sec h3 {
@@ -186,7 +180,7 @@
     gap: 12px;
     color: var(--accent);
     font-family: var(--font-head);
-    font-size: clamp(20px, 2.6vh, 34px);
+    font-size: 22px;
     font-weight: 400;
     letter-spacing: 0.06em;
     line-height: 1.25;
@@ -201,16 +195,16 @@
 }
 
 .rm__list {
-    margin-top: 4px;
+    margin-top: 6px;
     list-style: none;
 }
 
 .rm__list li {
-    padding: clamp(8px, 1.2vh, 18px) 0;
+    padding: 11px 0;
     border-bottom: 1px solid var(--line);
     color: var(--dark);
-    font-size: clamp(15px, 1.8vh, 26px);
-    line-height: 1.45;
+    font-size: 15px;
+    line-height: 1.5;
 }
 
 .rm__list li:last-child {
@@ -226,8 +220,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    margin-top: 8px;
-    padding: clamp(12px, 1.8vh, 26px) 22px;
+    margin-top: 10px;
+    padding: 14px 20px;
     border: 1px solid rgba(168, 105, 42, 0.45);
     border-radius: 14px;
     background: var(--paper-2);
@@ -235,7 +229,7 @@
 }
 
 .rm__depth span {
-    font-size: clamp(13px, 1.5vh, 20px);
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -244,7 +238,7 @@
 .rm__depth b {
     color: var(--accent);
     font-family: var(--font-head);
-    font-size: clamp(32px, 4.4vh, 60px);
+    font-size: 34px;
     font-weight: 400;
     line-height: 1;
     white-space: nowrap;
@@ -253,11 +247,10 @@
 .rm__foot {
     position: relative;
     display: flex;
-    flex: 0 0 auto;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    padding: 18px 28px;
+    padding: 18px 26px;
     border-top: 1px solid var(--line);
     background: #fff;
 }
@@ -270,7 +263,7 @@
     gap: 14px;
     min-width: 0;
     color: var(--dark);
-    font-size: clamp(15px, 1.8vh, 24px);
+    font-size: 15px;
     font-weight: 600;
     line-height: 1.35;
     cursor: pointer;
@@ -325,12 +318,12 @@
 
 .rm__ok {
     flex: 0 0 auto;
-    padding: clamp(14px, 1.8vh, 22px) 48px;
+    padding: 16px 44px;
     border: 1px solid var(--dark);
     border-radius: 999px;
     background: var(--dark);
     color: var(--cream);
-    font-size: clamp(16px, 2vh, 24px);
+    font-size: 16px;
     font-weight: 700;
     line-height: 1.2;
     white-space: nowrap;
@@ -465,8 +458,7 @@
 
     .rm__box {
         width: 100%;
-        height: 94vh;
-        height: 94dvh;
+        max-height: 94vh;
         border-radius: var(--radius) var(--radius) 0 0;
     }
 
@@ -497,7 +489,11 @@
     }
 
     .rm__body {
-        padding: 4px 16px 10px;
+        padding: 2px 16px 36px;
+    }
+
+    .rm__sec h3 {
+        font-size: 19px;
     }
 
     .rm__foot {

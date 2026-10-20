@@ -192,6 +192,38 @@
         scrollTop();
     }
 
+    /* ---------- Полный экран по клику на логотип (как F11) ---------- */
+    function fullscreenSupported() {
+        return !!(root.requestFullscreen || root.webkitRequestFullscreen);
+    }
+
+    function isFullscreen() {
+        return !!(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+
+    function toggleFullscreen() {
+        if (!fullscreenSupported())
+            return;
+        try {
+            if (isFullscreen()) {
+                const exit = document.exitFullscreen || document.webkitExitFullscreen;
+                const res = exit.call(document);
+                if (res && res.catch)
+                    res.catch(() => {});
+            } else {
+                const enter = root.requestFullscreen || root.webkitRequestFullscreen;
+                const res = enter.call(root);
+                if (res && res.catch)
+                    res.catch(() => {});
+            }
+        } catch (err) {}
+    }
+
+    head.querySelector('.brand').addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleFullscreen();
+    });
+
     catsBox.addEventListener('click', (e) => {
         const b = e.target.closest('[data-cat]');
         if (b)
@@ -275,13 +307,18 @@
     }
 
     let lastW = window.innerWidth;
+    let lastH = window.innerHeight;
     let resizeTimer = 0;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            if (window.innerWidth === lastW)
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const changed = w !== lastW || Math.abs(h - lastH) > 80;
+            if (!changed)
                 return;
-            lastW = window.innerWidth;
+            lastW = w;
+            lastH = h;
             const cat = byId(current);
             if (!cat)
                 return;

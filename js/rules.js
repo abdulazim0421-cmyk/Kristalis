@@ -208,7 +208,8 @@
         } catch (e) {
             return false;
         }
-    })();    let pending = null;
+    })();
+    let pending = null;
     let lastFocus = null;
 
     const isOk = () => accepted;
@@ -354,7 +355,8 @@
         accepted = true;
         try {
             sessionStorage.setItem('kr-rules', '1');
-        } catch (e) {}        const next = pending;
+        } catch (e) {}
+        const next = pending;
         close();
         if (next)
             setTimeout(() => next.click(), 280);
@@ -398,6 +400,16 @@
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('is-open') && isOk())
             close();
+    });
+
+    document.addEventListener('kr:reset', () => {
+        accepted = false;
+        pending = null;
+        try {
+            sessionStorage.removeItem('kr-rules');
+        } catch (e) {}
+        modal.classList.remove('is-open');
+        root.classList.remove('no-scroll');
     });
 
     new MutationObserver(renderAll).observe(root, { attributes: true, attributeFilter: ['lang'] });

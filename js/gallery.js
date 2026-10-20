@@ -2,45 +2,35 @@
 
 (() => {
     const root = document.documentElement;
+    const box = document.getElementById('galx');
+    if (!box)
+        return;
 
-    function must(selector) {
-        const el = document.querySelector(selector);
-        if (!el)
-            throw new Error(`Element not found: ${selector}`);
-        return el;
-    }
+    const q = (s) => box.querySelector(s);
+    const scroller = q('#galx-scroll');
+    const home = q('#gal-home');
+    const view = q('#gal-view');
+    const catsBox = q('#gal-cats');
+    const chips = q('#gal-chips');
+    const rowsBox = q('#gal-rows');
+    const nameEl = q('#gal-name');
+    const countEl = q('#gal-count');
+    const langBox = q('.lang');
+    const langBtn = q('.lang__btn');
 
     const SPEEDS = [34, 46, 40];
     const DIRS = ['normal', 'reverse', 'normal'];
 
-    let lang = (() => {
-        try {
-            const v = sessionStorage.getItem('kr-lang');
-            return v && UI[v] ? v : 'ru';
-        } catch (e) {
-            return 'ru';
-        }
-    })();
-
-    const t = (key) => UI[lang][key];
-    const tr = (obj) => obj[lang] || obj.ru;
+    const lg = () => (UI[root.lang] ? root.lang : 'ru');
+    const t = (key) => UI[lg()][key];
+    const tr = (obj) => obj[lg()] || obj.ru;
     const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-    const head = must('#head');
-    const home = must('#gal-home');
-    const view = must('#gal-view');
-    const catsBox = must('#gal-cats');
-    const chips = must('#gal-chips');
-    const rowsBox = must('#gal-rows');
-    const nameEl = must('#gal-name');
-    const countEl = must('#gal-count');
-    const langBox = must('#lang');
-    const langBtn = must('#lang-btn');
+    const byId = (id) => GALLERY.find(c => c.id === id);
 
     let current = null;
     let sel = null;
-
-    const byId = (id) => GALLERY.find(c => c.id === id);
+    let isOpen = false;
+    let closeTimer = 0;
 
     function swap(el) {
         el.classList.remove('is-swap');
@@ -51,20 +41,6 @@
     function setLangMenu(open) {
         langBox.classList.toggle('is-open', open);
         langBtn.setAttribute('aria-expanded', String(open));
-    }
-
-    function applyStatic() {
-        root.lang = lang;
-        document.title = `${t('galTitle')} — ${t('brand')}`;
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            el.textContent = t(el.dataset.i18n);
-        });
-        document.querySelectorAll('[data-i18n-aria]').forEach(el => {
-            el.setAttribute('aria-label', t(el.dataset.i18nAria));
-        });
-        document.querySelectorAll('[data-lang]').forEach(b => {
-            b.classList.toggle('is-active', b.dataset.lang === lang);
-        });
     }
 
     const countText = (cat) => t('galCount').replace('{n}', cat.photos.length);
@@ -165,7 +141,7 @@
     }
 
     function scrollTop() {
-        window.scrollTo({ left: 0, top: 0, behavior: 'instant' });
+        scroller.scrollTo({ left: 0, top: 0, behavior: 'instant' });
     }
 
     function openCat(id) {
@@ -192,6 +168,49 @@
         scrollTop();
     }
 
+    function openGallery() {
+        if (isOpen)
+            return;
+        isOpen = true;
+        clearTimeout(closeTimer);
+        box.hidden = false;
+        box.setAttribute('aria-hidden', 'false');
+        root.classList.add('no-scroll');
+        showHome();
+        void box.offsetWidth;
+        box.classList.add('is-open');
+    }
+
+    function closeGallery() {
+        if (!isOpen)
+            return;
+        isOpen = false;
+        release();
+        setLangMenu(false);
+        box.classList.remove('is-open');
+        root.classList.remove('no-scroll');
+        clearTimeout(closeTimer);
+        closeTimer = setTimeout(() => {
+            box.hidden = true;
+            box.setAttribute('aria-hidden', 'true');
+            rowsBox.innerHTML = '';
+            current = null;
+        }, 320);
+    }
+
+    document.addEventListener('click', (e) => {
+        const a = e.target.closest('a[href="#gallery"]');
+        if (!a)
+            return;
+        e.preventDefault();
+        openGallery();
+    });
+
+    document.addEventListener('kr:reset', closeGallery);
+
+    q('.galx__brand').addEventListener('click', closeGallery);
+    q('.gal-back').addEventListener('click', closeGallery);
+
     catsBox.addEventListener('click', (e) => {
         const b = e.target.closest('[data-cat]');
         if (b)
@@ -204,7 +223,7 @@
             openCat(b.dataset.cat);
     });
 
-    must('#gal-all').addEventListener('click', showHome);
+    q('#gal-all').addEventListener('click', showHome);
 
     rowsBox.addEventListener('click', (e) => {
         const card = e.target.closest('.gal-card');
@@ -237,7 +256,7 @@
             e.target.remove();
     }, true);
 
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    box.addEventListener('contextmenu', (e) => e.preventDefault());
 
     langBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -245,13 +264,7 @@
     });
 
     document.addEventListener('click', (e) => {
-        const b = e.target.closest('[data-lang]');
-        if (b) {
-            setLang(b.dataset.lang);
-            setLangMenu(false);
-            return;
-        }
-        if (!e.target.closest('#lang'))
+        if (e.target.closest('[data-lang]') || !e.target.closest('.galx .lang'))
             setLangMenu(false);
     });
 
@@ -262,17 +275,11 @@
         setLangMenu(false);
     });
 
-    function setLang(l) {
-        if (l === lang || !UI[l])
-            return;
-        lang = l;
-        try {
-            sessionStorage.setItem('kr-lang', l);
-        } catch (e) {}
-        applyStatic();
+    new MutationObserver(() => {
         renderCats();
-        renderHead();
-    }
+        if (current)
+            renderHead();
+    }).observe(root, { attributes: true, attributeFilter: ['lang'] });
 
     let lastW = window.innerWidth;
     let lastH = window.innerHeight;
@@ -283,10 +290,10 @@
             const w = window.innerWidth;
             const h = window.innerHeight;
             const changed = w !== lastW || Math.abs(h - lastH) > 80;
-            if (!changed)
-                return;
             lastW = w;
             lastH = h;
+            if (!changed || !isOpen)
+                return;
             const cat = byId(current);
             if (!cat)
                 return;
@@ -296,26 +303,5 @@
         }, 200);
     });
 
-    let ticking = false;
-    function onScrollFrame() {
-        ticking = false;
-        if (window.scrollX !== 0)
-            window.scrollTo({ left: 0, top: window.scrollY, behavior: 'instant' });
-        head.classList.toggle('is-scrolled', window.scrollY > 40);
-    }
-
-    window.addEventListener('scroll', () => {
-        if (ticking)
-            return;
-        ticking = true;
-        requestAnimationFrame(onScrollFrame);
-    }, { passive: true });
-
-    applyStatic();
     renderCats();
-    onScrollFrame();
-
-    const hash = location.hash.slice(1);
-    if (byId(hash))
-        openCat(hash);
 })();

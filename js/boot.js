@@ -26,55 +26,6 @@
 })();
 
 (() => {
-    const root = document.documentElement;
-    const FS_KEY = "kr-fs";
-
-    const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
-    const canFs = () => !!(root.requestFullscreen || root.webkitRequestFullscreen);
-
-    const getFlag = () => {
-        try {
-            return sessionStorage.getItem(FS_KEY) === "1";
-        } catch (e) {
-            return false;
-        }
-    };
-
-    const setFlag = (v) => {
-        try {
-            sessionStorage.setItem(FS_KEY, v ? "1" : "0");
-        } catch (e) {}
-    };
-
-    function enterFs() {
-        if (!canFs() || isFs())
-            return;
-        try {
-            const enter = root.requestFullscreen || root.webkitRequestFullscreen;
-            const res = enter.call(root);
-            if (res && res.catch)
-                res.catch(() => {});
-        } catch (e) {}
-    }
-
-    const brand = document.querySelector(".brand");
-    if (brand && !document.body.classList.contains("gal-page")) {
-        brand.addEventListener("click", () => {
-            setFlag(!isFs());
-        }, true);
-    }
-
-    function restoreFs() {
-        if (getFlag() && !isFs())
-            enterFs();
-    }
-
-    ["pointerup", "click", "touchend"].forEach(name => {
-        document.addEventListener(name, restoreFs, { capture: true, passive: true });
-    });
-})();
-
-(() => {
     const IDLE_MS = 120000;
     const CHECK_MS = 5000;
     const UPDATE_MS = 3600000;
@@ -88,7 +39,28 @@
     if ("scrollRestoration" in history)
         history.scrollRestoration = "manual";
 
+    const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+    function softReset() {
+        try {
+            sessionStorage.removeItem("kr-lang");
+        } catch (e) {}
+        const ru = document.querySelector('#lang [data-lang="ru"]');
+        if (ru && document.documentElement.lang !== "ru")
+            ru.click();
+        const male = document.querySelector('#services .gender [data-g="m"]');
+        if (male)
+            male.click();
+        document.dispatchEvent(new Event("kr:reset"));
+        window.scrollTo({ left: 0, top: 0, behavior: "instant" });
+    }
+
     function resetKiosk() {
+        if (isFs() && !updateReady) {
+            softReset();
+            dirty = false;
+            return;
+        }
         try {
             sessionStorage.removeItem("kr-lang");
             sessionStorage.removeItem("kr-rules");

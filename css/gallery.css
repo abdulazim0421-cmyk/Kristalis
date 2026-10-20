@@ -1,25 +1,33 @@
-html,
-body {
-    max-width: 100%;
-    overflow-x: clip;
-    touch-action: pan-x pan-y;
-    overscroll-behavior: none;
-}
-
 [hidden] {
     display: none !important;
 }
 
-body.gal-page {
+.galx {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    overflow: hidden;
     background: var(--night);
+    color: var(--cream);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-body.gal-page::before {
-    content: '';
-    position: fixed;
-    inset: -20%;
-    z-index: 0;
+.galx.is-open {
+    opacity: 1;
+}
+
+.galx__bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
     pointer-events: none;
+}
+
+.galx__bg::before {
+    content: '';
+    position: absolute;
+    inset: -20%;
     background:
             radial-gradient(circle at 10% 52%, rgba(246, 214, 150, 0.75) 0%, rgba(214, 150, 80, 0.5) 14%, rgba(150, 82, 30, 0.28) 30%, transparent 48%),
             radial-gradient(circle at 88% 14%, rgba(168, 105, 42, 0.38), transparent 40%),
@@ -29,51 +37,22 @@ body.gal-page::before {
     animation: gal-drift 26s ease-in-out infinite alternate;
 }
 
-body.gal-page::after {
+.galx__bg::after {
     content: '';
-    position: fixed;
+    position: absolute;
     inset: 0;
-    z-index: 0;
-    pointer-events: none;
     background:
             linear-gradient(100deg, rgba(14, 8, 4, 0) 0%, rgba(14, 8, 4, 0.35) 45%, rgba(10, 5, 2, 0.88) 100%),
             radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, rgba(8, 4, 2, 0.65) 100%);
 }
 
-.gal {
-    position: relative;
-    z-index: 1;
-    min-height: 100vh;
-    min-height: 100dvh;
-    padding: 118px 0 70px;
-    background: transparent;
-    color: var(--cream);
-}
-
-.gal::before {
-    content: '';
-    position: fixed;
-    inset: -30% -10%;
-    z-index: -1;
-    pointer-events: none;
-    background:
-            linear-gradient(112deg, transparent 18%, rgba(255, 220, 160, 0.1) 24%, transparent 32%),
-            linear-gradient(112deg, transparent 38%, rgba(255, 200, 120, 0.08) 45%, transparent 53%),
-            linear-gradient(112deg, transparent 58%, rgba(255, 220, 160, 0.07) 64%, transparent 72%);
-    will-change: transform, opacity;
-    animation: gal-beams 14s ease-in-out infinite alternate;
-}
-
-.gal::after {
-    content: '';
-    position: fixed;
+.galx__bg i {
+    position: absolute;
     bottom: -12px;
     left: 0;
-    z-index: -1;
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    pointer-events: none;
     background: rgba(255, 226, 170, 0.95);
     box-shadow:
             6vw 0 0 0 rgba(255, 226, 170, 0.9),
@@ -90,6 +69,55 @@ body.gal-page::after {
             95vw -30vh 0 1px rgba(255, 210, 140, 0.7);
     will-change: transform, opacity;
     animation: gal-sparks 18s ease-in-out infinite;
+    z-index: 1;
+}
+
+.galx__scroll {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.galx__scroll::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.galx__bar {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    background: linear-gradient(rgba(14, 8, 4, 0.85), rgba(14, 8, 4, 0));
+}
+
+.galx__barin {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding-block: 18px;
+}
+
+.galx__brand {
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    line-height: 0;
+}
+
+.gal {
+    padding: 20px 0 70px;
+    color: var(--cream);
 }
 
 .gal-back {
@@ -99,12 +127,14 @@ body.gal-page::after {
     padding: 9px 18px 9px 12px;
     border: 1px solid rgba(246, 234, 215, 0.35);
     border-radius: 999px;
+    background: rgba(18, 10, 5, 0.35);
     color: var(--cream);
     font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.06em;
     line-height: 1.2;
     white-space: nowrap;
+    cursor: pointer;
     transition: background 0.3s, border-color 0.3s;
 }
 
@@ -115,7 +145,7 @@ body.gal-page::after {
 
 .gal-back:hover {
     border-color: var(--cream);
-    background: rgba(246, 234, 215, 0.08);
+    background: rgba(246, 234, 215, 0.12);
 }
 
 .gal-title {
@@ -441,12 +471,6 @@ body.gal-page::after {
     text-align: center;
 }
 
-.footer {
-    position: relative;
-    z-index: 1;
-    background: rgba(18, 10, 5, 0.6);
-}
-
 @keyframes gal-in {
     to {
         opacity: 1;
@@ -478,18 +502,6 @@ body.gal-page::after {
     }
 }
 
-@keyframes gal-beams {
-    0% {
-        opacity: 0.35;
-        transform: translate3d(-4%, 0, 0);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translate3d(4%, 0, 0);
-    }
-}
-
 @keyframes gal-sparks {
     0% {
         opacity: 0;
@@ -507,16 +519,6 @@ body.gal-page::after {
     100% {
         opacity: 0;
         transform: translate3d(2vw, -45vh, 0);
-    }
-}
-
-@media (max-width: 960px) {
-    .gal {
-        padding-top: 104px;
-    }
-
-    .header__tools {
-        gap: 10px;
     }
 }
 
@@ -546,9 +548,8 @@ body.gal-page::after {
         transform: none;
     }
 
-    body.gal-page::before,
-    .gal::before,
-    .gal::after {
+    .galx__bg::before,
+    .galx__bg i {
         animation: none;
     }
 }

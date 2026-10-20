@@ -26,15 +26,55 @@
 })();
 
 (() => {
-    if (window.self !== window.top) {
-        ["pointerdown", "touchstart", "keydown", "scroll"].forEach(name => {
-            window.addEventListener(name, () => {
-                window.parent.postMessage({ kr: "activity" }, location.origin);
-            }, { passive: true, capture: true });
-        });
-        return;
+    const root = document.documentElement;
+    const FS_KEY = "kr-fs";
+
+    const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+    const canFs = () => !!(root.requestFullscreen || root.webkitRequestFullscreen);
+
+    const getFlag = () => {
+        try {
+            return sessionStorage.getItem(FS_KEY) === "1";
+        } catch (e) {
+            return false;
+        }
+    };
+
+    const setFlag = (v) => {
+        try {
+            sessionStorage.setItem(FS_KEY, v ? "1" : "0");
+        } catch (e) {}
+    };
+
+    function enterFs() {
+        if (!canFs() || isFs())
+            return;
+        try {
+            const enter = root.requestFullscreen || root.webkitRequestFullscreen;
+            const res = enter.call(root);
+            if (res && res.catch)
+                res.catch(() => {});
+        } catch (e) {}
     }
 
+    const brand = document.querySelector(".brand");
+    if (brand && !document.body.classList.contains("gal-page")) {
+        brand.addEventListener("click", () => {
+            setFlag(!isFs());
+        }, true);
+    }
+
+    function restoreFs() {
+        if (getFlag() && !isFs())
+            enterFs();
+    }
+
+    ["pointerup", "click", "touchend"].forEach(name => {
+        document.addEventListener(name, restoreFs, { capture: true, passive: true });
+    });
+})();
+
+(() => {
     const IDLE_MS = 120000;
     const CHECK_MS = 5000;
     const UPDATE_MS = 3600000;

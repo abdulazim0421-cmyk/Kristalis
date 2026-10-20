@@ -192,50 +192,6 @@
         scrollTop();
     }
 
-    /* ---------- Полный экран по клику на логотип (как F11) ---------- */
-    function fullscreenSupported() {
-        return !!(root.requestFullscreen || root.webkitRequestFullscreen);
-    }
-
-    function isFullscreen() {
-        return !!(document.fullscreenElement || document.webkitFullscreenElement);
-    }
-
-    function toggleFullscreen() {
-        if (!fullscreenSupported())
-            return;
-        try {
-            if (isFullscreen()) {
-                const exit = document.exitFullscreen || document.webkitExitFullscreen;
-                const res = exit.call(document);
-                if (res && res.catch)
-                    res.catch(() => {});
-            } else {
-                const enter = root.requestFullscreen || root.webkitRequestFullscreen;
-                const res = enter.call(root);
-                if (res && res.catch)
-                    res.catch(() => {});
-            }
-        } catch (err) {}
-    }
-
-    function goHome() {
-        if (window.parent !== window)
-            window.parent.postMessage({ kr: 'close-gallery' }, location.origin);
-        else
-            location.href = 'index.html';
-    }
-
-    head.querySelector('.brand').addEventListener('click', (e) => {
-        e.preventDefault();
-        goHome();
-    });
-
-    head.querySelector('.gal-back').addEventListener('click', (e) => {
-        e.preventDefault();
-        goHome();
-    });
-
     catsBox.addEventListener('click', (e) => {
         const b = e.target.closest('[data-cat]');
         if (b)

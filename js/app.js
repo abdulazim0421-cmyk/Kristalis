@@ -3,6 +3,11 @@
 (() => {
     const root = document.documentElement;
 
+    for (let i = SECTIONS.length - 1; i >= 0; i--) {
+        if (SECTIONS.findIndex(s => s.id === SECTIONS[i].id) !== i)
+            SECTIONS.splice(i, 1);
+    }
+
     function must(selector) {
         const el = document.querySelector(selector);
         if (!el)
@@ -615,11 +620,19 @@
     function setLang(l) {
         if (l === lang)
             return;
+        const pricesEl = must('#prices');
+        const servicesEl = must('#services');
+        const anchor = pricesEl.getBoundingClientRect().top <= 160 ? pricesEl : servicesEl;
+        const before = anchor.getBoundingClientRect().top;
+
         lang = l;
         applyStatic();
         renderServices();
         renderPrices();
         fitSectionHeight();
+
+        const delta = anchor.getBoundingClientRect().top - before;
+        window.scrollTo({ left: 0, top: Math.max(0, window.scrollY + delta), behavior: 'instant' });
     }
 
     langBtn.addEventListener('click', (e) => {
@@ -798,6 +811,8 @@
 
     function onScrollFrame() {
         scrollTicking = false;
+        if (window.scrollX !== 0)
+            window.scrollTo({ left: 0, top: window.scrollY, behavior: 'instant' });
         const y = window.scrollY;
         head.classList.toggle('is-scrolled', y > 40);
         toTop.classList.toggle('is-visible', y > 600);

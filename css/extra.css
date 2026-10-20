@@ -1,3 +1,9 @@
+html,
+body {
+    max-width: 100%;
+    overflow-x: clip;
+}
+
 html.no-scroll {
     overflow: hidden;
 }
@@ -27,16 +33,23 @@ html.no-scroll {
     grid-template-columns: 300px minmax(0, 1fr);
     gap: 28px;
     align-items: start;
+    max-width: 100%;
     margin-top: 34px;
 }
 
 .pmain {
     min-width: 0;
+    max-width: 100%;
 }
 
 .pmain .price__card {
     position: relative;
     margin: 0 0 22px;
+}
+
+.price__list li span {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .pside {
@@ -105,21 +118,15 @@ html.no-scroll {
 }
 
 .vmode--card {
-    position: absolute;
-    top: 21px;
-    right: 34px;
-    z-index: 2;
+    width: max-content;
+    max-width: 100%;
+    margin: 10px 0 2px auto;
     background: #fff;
 }
 
 .vmode--card button {
     padding: 6px 16px;
     font-size: 13px;
-}
-
-.price__card.is-compact .vmode--card {
-    top: 14px;
-    right: 30px;
 }
 
 .fsub {
@@ -282,6 +289,7 @@ html.no-scroll {
     font-size: 15px;
     font-weight: 500;
     line-height: 1.35;
+    overflow-wrap: anywhere;
 }
 
 .fcard__price {
@@ -304,10 +312,6 @@ html.no-scroll {
 
     .pmain .price__card {
         padding-inline: 22px;
-    }
-
-    .vmode--card {
-        right: 22px;
     }
 
     .pgrid {

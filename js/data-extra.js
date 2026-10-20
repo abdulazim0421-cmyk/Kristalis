@@ -1,6 +1,9 @@
 "use strict";
 
 (() => {
+    if (SECTIONS.some(s => s.id === "kitchen"))
+        return;
+
     const L = (ru, ky, en) => ({ ru, ky, en });
     const R = (rows, who = "mf") => rows.map(([name, cost, g, max]) => [name, cost, g || who, 0, null, null, max || 0]);
 

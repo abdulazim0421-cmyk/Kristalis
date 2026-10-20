@@ -219,9 +219,21 @@
         } catch (err) {}
     }
 
+    function goHome() {
+        if (window.parent !== window)
+            window.parent.postMessage({ kr: 'close-gallery' }, location.origin);
+        else
+            location.href = 'index.html';
+    }
+
     head.querySelector('.brand').addEventListener('click', (e) => {
         e.preventDefault();
-        toggleFullscreen();
+        goHome();
+    });
+
+    head.querySelector('.gal-back').addEventListener('click', (e) => {
+        e.preventDefault();
+        goHome();
     });
 
     catsBox.addEventListener('click', (e) => {

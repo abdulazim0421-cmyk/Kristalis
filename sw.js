@@ -1,6 +1,6 @@
 "use strict";
 
-const VERSION = 'kr-v9';
+const VERSION = 'kr-v10';
 const CORE = `${VERSION}-core`;
 const MEDIA = `${VERSION}-media`;
 const MEDIA_LIMIT = 120;
@@ -20,8 +20,9 @@ const PRECACHE = [
     'js/menu-i18n.js?v=7',
     'js/app.js?v=9',
     'js/rules.js?v=2',
-    'js/boot.js?v=2',
-    'js/gallery.js?v=2',
+    'js/boot.js?v=3',
+    'js/gallery-embed.js?v=1',
+    'js/gallery.js?v=3',
     'manifest.webmanifest',
     'icons/icon-192.png',
     'icons/icon-512.png',

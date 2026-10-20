@@ -26,6 +26,15 @@
 })();
 
 (() => {
+    if (window.self !== window.top) {
+        ["pointerdown", "touchstart", "keydown", "scroll"].forEach(name => {
+            window.addEventListener(name, () => {
+                window.parent.postMessage({ kr: "activity" }, location.origin);
+            }, { passive: true, capture: true });
+        });
+        return;
+    }
+
     const IDLE_MS = 120000;
     const CHECK_MS = 5000;
     const UPDATE_MS = 3600000;

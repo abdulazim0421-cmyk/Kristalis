@@ -349,12 +349,18 @@
         sec.style.minHeight = Math.max(0, Math.ceil(h)) + 'px';
     }
 
+    function pickSection(id) {
+        if (id === 'kitchen' && state.section !== 'kitchen')
+            state.mode = 'photo';
+        state.section = id;
+        state.group = null;
+    }
+
     list.addEventListener('click', (e) => {
         const go = e.target.closest('[data-go]');
         if (!go)
             return;
-        state.section = go.dataset.go;
-        state.group = null;
+        pickSection(go.dataset.go);
         renderPrices();
         fitSectionHeight();
         scrollToPrices();
@@ -518,8 +524,7 @@
                     closePanel();
                 return;
             }
-            state.section = sec.dataset.fsec;
-            state.group = null;
+            pickSection(sec.dataset.fsec);
             if (!hasGroups)
                 panelOpen = false;
             renderPrices();
@@ -749,6 +754,37 @@
 
     toTop.addEventListener('click', goTop);
 
+    function fullscreenSupported() {
+        return !!(root.requestFullscreen || root.webkitRequestFullscreen);
+    }
+
+    function isFullscreen() {
+        return !!(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+
+    function toggleFullscreen() {
+        if (!fullscreenSupported()) {
+            goTop();
+            return;
+        }
+        closeMobileNav();
+        try {
+            if (isFullscreen()) {
+                const exit = document.exitFullscreen || document.webkitExitFullscreen;
+                const res = exit.call(document);
+                if (res && res.catch)
+                    res.catch(() => {});
+            } else {
+                const enter = root.requestFullscreen || root.webkitRequestFullscreen;
+                const res = enter.call(root);
+                if (res && res.catch)
+                    res.catch(() => {});
+            }
+        } catch (err) {
+            goTop();
+        }
+    }
+
     document.querySelectorAll('.reveal').forEach(el => {
         if (!list.contains(el))
             io.observe(el);
@@ -787,7 +823,7 @@
 
     head.querySelector('.brand').addEventListener('click', (e) => {
         e.preventDefault();
-        goTop();
+        toggleFullscreen();
     });
 
     const spyLinks = [...document.querySelectorAll('.nav a[href^="#"], .mnav a[href^="#"]')];

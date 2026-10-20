@@ -34,8 +34,14 @@
     const FOOD_EXT = ['jpg'];
     const MOBILE = 900;
 
-    let lang = 'ru';
-    const state = { g: 'm', section: null, group: null, mode: 'list' };
+    let lang = (() => {
+        try {
+            const v = sessionStorage.getItem('kr-lang');
+            return v && UI[v] ? v : 'ru';
+        } catch (e) {
+            return 'ru';
+        }
+    })();    const state = { g: 'm', section: null, group: null, mode: 'list' };
 
     const t = (key) => UI[lang][key];
     const tr = (obj) => obj[lang] || obj.ru;
@@ -631,7 +637,9 @@
         const before = anchor.getBoundingClientRect().top;
 
         lang = l;
-        applyStatic();
+        try {
+            sessionStorage.setItem('kr-lang', l);
+        } catch (e) {}        applyStatic();
         renderServices();
         renderPrices();
         fitSectionHeight();

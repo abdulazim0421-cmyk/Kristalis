@@ -202,8 +202,13 @@
     const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
     let mlang = 'ru';
-    let accepted = false;
-    let pending = null;
+    let accepted = (() => {
+        try {
+            return sessionStorage.getItem('kr-rules') === '1';
+        } catch (e) {
+            return false;
+        }
+    })();    let pending = null;
     let lastFocus = null;
 
     const isOk = () => accepted;
@@ -347,7 +352,9 @@
         if (!chk.checked)
             return;
         accepted = true;
-        const next = pending;
+        try {
+            sessionStorage.setItem('kr-rules', '1');
+        } catch (e) {}        const next = pending;
         close();
         if (next)
             setTimeout(() => next.click(), 280);

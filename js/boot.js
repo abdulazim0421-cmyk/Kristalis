@@ -29,6 +29,7 @@
     const IDLE_MS = 120000;
     const CHECK_MS = 5000;
     const UPDATE_MS = 3600000;
+    const HOME = new URL("./", location.href).pathname;
 
     let lastTouch = Date.now();
     let dirty = false;
@@ -37,6 +38,14 @@
 
     if ("scrollRestoration" in history)
         history.scrollRestoration = "manual";
+
+    function resetKiosk() {
+        try {
+            sessionStorage.removeItem("kr-lang");
+            sessionStorage.removeItem("kr-rules");
+        } catch (e) {}
+        location.replace(HOME);
+    }
 
     ["pointerdown", "touchstart", "keydown", "scroll"].forEach(name => {
         window.addEventListener(name, () => {
@@ -47,7 +56,7 @@
 
     setInterval(() => {
         if ((dirty || updateReady) && Date.now() - lastTouch > IDLE_MS)
-            location.replace(location.pathname);
+            resetKiosk();
     }, CHECK_MS);
 
     if (!("serviceWorker" in navigator))

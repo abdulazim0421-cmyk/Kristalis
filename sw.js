@@ -1,23 +1,27 @@
 "use strict";
 
-const VERSION = 'kr-v3';
+const VERSION = 'kr-v6';
 const CORE = `${VERSION}-core`;
 const MEDIA = `${VERSION}-media`;
-const MEDIA_LIMIT = 80;
+const MEDIA_LIMIT = 120;
 const NETWORK_TIMEOUT = 5000;
 
 const PRECACHE = [
     './',
     'index.html',
-    'css/style.css?v=5',
-    'css/extra.css?v=5',
-    'css/rules.css?v=1',
-    'js/data.js',
-    'js/data-extra.js',
-    'js/menu-i18n.js',
-    'js/app.js',
-    'js/rules.js',
-    'js/boot.js',
+    'gallery.html',
+    'css/style.css?v=6',
+    'css/extra.css?v=6',
+    'css/rules.css?v=4',
+    'css/gallery.css?v=1',
+    'js/data.js?v=7',
+    'js/gallery-data.js?v=1',
+    'js/data-extra.js?v=7',
+    'js/menu-i18n.js?v=7',
+    'js/app.js?v=9',
+    'js/rules.js?v=2',
+    'js/boot.js?v=2',
+    'js/gallery.js?v=1',
     'manifest.webmanifest',
     'icons/icon-192.png',
     'icons/icon-512.png',

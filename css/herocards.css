@@ -30,7 +30,13 @@
     gap: var(--hc-gap);
     width: calc(var(--hc-w) * var(--hc-cols) + var(--hc-gap) * (var(--hc-cols) - 1));
     max-width: 100%;
-    margin: clamp(88px, 7.6vh, 108px) auto 0;
+    margin: clamp(26px, 4.2vh, 50px) auto 0;
+}
+
+@media (orientation: portrait) {
+    .hcards {
+        margin-top: clamp(116px, 14vh, 140px);
+    }
 }
 
 .hcard {

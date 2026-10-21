@@ -1,6 +1,6 @@
 "use strict";
 
-const VERSION = 'kr-v13';
+const VERSION = 'kr-v15';
 const CORE = `${VERSION}-core`;
 const MEDIA = `${VERSION}-media`;
 const MEDIA_LIMIT = 120;
@@ -13,7 +13,7 @@ const PRECACHE = [
     'css/extra.css?v=6',
     'css/rules.css?v=4',
     'css/gallery.css?v=6',
-    'css/herocards.css?v=1',
+    'css/herocards.css?v=3',
     'js/data.js?v=7',
     'js/gallery-data.js?v=1',
     'js/data-extra.js?v=7',

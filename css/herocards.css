@@ -1,24 +1,23 @@
 .hero.has-cards {
     --hc-gap: 14px;
-    --hc-w: clamp(104px, min(calc((92vw - 2 * var(--hc-gap)) / 3), 21vh), 340px);
-    --hc-h: calc(var(--hc-w) * 0.72);
     --hc-cols: 3;
+    --hc-w: clamp(88px, min(calc((92vw - 2 * var(--hc-gap)) / 3), 20vh), 320px);
+    --hc-h: calc(var(--hc-w) * 0.74);
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    justify-content: flex-start;
-    padding: clamp(96px, 12vh, 150px) 0 clamp(20px, 3.5vh, 44px);
+    justify-content: center;
+    padding: clamp(96px, 12vh, 150px) 0 clamp(24px, 4vh, 48px);
 }
 
 .hero.has-cards .hero__content {
     flex: 0 0 auto;
     width: min(1240px, 92%);
-    margin-block: auto;
-    margin-inline: auto;
+    margin: 0 auto;
 }
 
 .hero.has-cards .hero__text {
-    margin: clamp(10px, 2vh, 24px) auto clamp(14px, 3vh, 32px);
+    margin: clamp(10px, 2vh, 24px) auto clamp(14px, 2.6vh, 30px);
 }
 
 .hcards {
@@ -31,7 +30,7 @@
     gap: var(--hc-gap);
     width: calc(var(--hc-w) * var(--hc-cols) + var(--hc-gap) * (var(--hc-cols) - 1));
     max-width: 100%;
-    margin: clamp(12px, 2.4vh, 30px) auto 0;
+    margin: clamp(14px, 2.6vh, 32px) auto 0;
 }
 
 .hcard {
@@ -54,17 +53,26 @@
     opacity: 0;
     transform: translateY(18px);
     animation: hc-in 0.7s var(--d, 0.9s) forwards;
-    transition: transform 0.3s ease, border-color 0.3s;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s, box-shadow 0.3s;
     -webkit-user-select: none;
     user-select: none;
-}
-
-.hcard:hover {
-    border-color: rgba(240, 194, 122, 0.9);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .hcard:active {
     transform: scale(0.97);
+}
+
+@media (hover: hover) {
+    .hcard:hover {
+        border-color: rgba(240, 194, 122, 0.95);
+        box-shadow: 0 16px 38px rgba(0, 0, 0, 0.6);
+        transform: translateY(-4px);
+    }
+
+    .hcard:hover .hcard__img img {
+        transform: scale(1.07);
+    }
 }
 
 .hcard__img {
@@ -77,13 +85,14 @@
     height: 100%;
     object-fit: cover;
     pointer-events: none;
+    transition: transform 0.8s ease;
 }
 
 .hcard::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(14, 8, 4, 0.05) 30%, rgba(14, 8, 4, 0.88) 100%);
+    background: linear-gradient(180deg, rgba(14, 8, 4, 0.05) 30%, rgba(14, 8, 4, 0.9) 100%);
 }
 
 .hcard__body {
@@ -100,7 +109,7 @@
 
 .hcard__name {
     font-family: var(--font-head);
-    font-size: clamp(12px, calc(var(--hc-w) * 0.075), 24px);
+    font-size: clamp(12px, calc(var(--hc-w) * 0.085), 24px);
     letter-spacing: 0.04em;
     line-height: 1.15;
     text-transform: uppercase;
@@ -108,7 +117,7 @@
 
 .hcard__count {
     color: var(--amber);
-    font-size: clamp(9px, calc(var(--hc-w) * 0.034), 12px);
+    font-size: clamp(9px, calc(var(--hc-w) * 0.038), 12px);
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -124,12 +133,56 @@
 @media (orientation: landscape) and (min-width: 900px) {
     .hero.has-cards {
         --hc-cols: 5;
-        --hc-w: clamp(110px, min(calc((92vw - 4 * var(--hc-gap)) / 5), 19vh), 300px);
-        padding-top: clamp(104px, 16vh, 160px);
+        --hc-gap: clamp(12px, 1.4vw, 22px);
+        --hc-w: clamp(130px, min(calc((92vw - 4 * var(--hc-gap)) / 5), 21vh), 270px);
+        padding-top: clamp(104px, 15vh, 150px);
+        padding-bottom: clamp(20px, 4vh, 44px);
+    }
+
+    .hero.has-cards .hero__content {
+        --logo-h: clamp(60px, min(10vw, 12vh), 120px);
+        padding-top: calc(var(--logo-h) + clamp(10px, 2vh, 20px));
+    }
+
+    .hero.has-cards .hero__eyebrow {
+        margin-bottom: clamp(8px, 1.6vh, 16px);
+    }
+
+    .hero.has-cards .hero__brand {
+        font-size: clamp(34px, min(8vw, 11vh), 110px);
+    }
+
+    .hero.has-cards .hero__orn {
+        margin: clamp(6px, 1.2vh, 14px) 0;
+    }
+
+    .hero.has-cards .hero__tag {
+        font-size: clamp(15px, min(2.2vw, 3.2vh), 32px);
+    }
+
+    .hero.has-cards .hero__text {
+        margin: clamp(8px, 1.6vh, 16px) auto clamp(12px, 2.2vh, 22px);
+        font-size: clamp(13px, min(1.2vw, 1.9vh), 17px);
+    }
+
+    .hero.has-cards .pill {
+        padding: clamp(10px, 1.7vh, 16px) 52px;
+    }
+
+    .hcard {
+        border-radius: 18px;
     }
 }
 
 @media (max-width: 480px) {
+    .hero.has-cards {
+        --hc-gap: 10px;
+    }
+
+    .hcard {
+        border-radius: 14px;
+    }
+
     .hcard__count {
         display: none;
     }
@@ -143,5 +196,9 @@
     .hcard {
         opacity: 1;
         transform: none;
+    }
+
+    .hcard__img img {
+        transition: none;
     }
 }

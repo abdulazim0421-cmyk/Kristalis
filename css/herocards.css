@@ -30,7 +30,7 @@
     gap: var(--hc-gap);
     width: calc(var(--hc-w) * var(--hc-cols) + var(--hc-gap) * (var(--hc-cols) - 1));
     max-width: 100%;
-    margin: clamp(14px, 2.6vh, 32px) auto 0;
+    margin: clamp(26px, 4.2vh, 50px) auto 0;
 }
 
 .hcard {

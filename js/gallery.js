@@ -38,6 +38,23 @@
     let last = 0;
     let heroBox = null;
 
+    function retryImg(img) {
+        if (!img.isConnected)
+            return;
+        const n = Math.min(Number(img.dataset.r || 0), 5);
+        img.dataset.r = String(n + 1);
+        const src = img.getAttribute('src');
+        setTimeout(() => {
+            if (img.isConnected && (!img.complete || img.naturalWidth === 0))
+                img.setAttribute('src', src);
+        }, Math.min(60000, 3000 * Math.pow(2, n)));
+    }
+
+    const onImgError = (e) => {
+        if (e.target.tagName === 'IMG')
+            retryImg(e.target);
+    };
+
     function swap(el) {
         el.classList.remove('is-swap');
         void el.offsetWidth;
@@ -59,10 +76,7 @@
             heroBox.className = 'hcards';
             hero.appendChild(heroBox);
             hero.classList.add('has-cards');
-            heroBox.addEventListener('error', (e) => {
-                if (e.target.tagName === 'IMG')
-                    e.target.remove();
-            }, true);
+            heroBox.addEventListener('error', onImgError, true);
         }
         heroBox.innerHTML = GALLERY.map((cat, i) => `
   <button type="button" class="hcard" data-hero-cat="${esc(cat.id)}" style="--d:${(0.9 + i * 0.12).toFixed(2)}s">
@@ -262,6 +276,7 @@
         current = id;
         home.hidden = true;
         view.hidden = false;
+        box.classList.add('is-view');
         renderRows(cat);
         renderHead();
         swap(view);
@@ -276,6 +291,7 @@
         rowsBox.innerHTML = '';
         view.hidden = true;
         home.hidden = false;
+        box.classList.remove('is-view');
         swap(home);
         scrollTop();
     }
@@ -306,6 +322,7 @@
         stopLoop();
         setLangMenu(false);
         box.classList.remove('is-open');
+        box.classList.remove('is-view');
         root.classList.remove('no-scroll');
         clearTimeout(closeTimer);
         closeTimer = setTimeout(() => {
@@ -371,15 +388,8 @@
             e.target.classList.add('is-loaded');
     }, true);
 
-    rowsBox.addEventListener('error', (e) => {
-        if (e.target.tagName === 'IMG')
-            e.target.remove();
-    }, true);
-
-    catsBox.addEventListener('error', (e) => {
-        if (e.target.tagName === 'IMG')
-            e.target.remove();
-    }, true);
+    rowsBox.addEventListener('error', onImgError, true);
+    catsBox.addEventListener('error', onImgError, true);
 
     box.addEventListener('contextmenu', (e) => e.preventDefault());
 

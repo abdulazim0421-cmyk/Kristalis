@@ -1,33 +1,58 @@
 "use strict";
 
-const VERSION = 'kr-v17';
+const VERSION = 'kr-v18';
 const CORE = `${VERSION}-core`;
-const MEDIA = `${VERSION}-media`;
-const MEDIA_LIMIT = 120;
-const NETWORK_TIMEOUT = 5000;
+const MEDIA = 'kr-media';
+const MEDIA_LIMIT = 600;
+const NETWORK_TIMEOUT = 4000;
 
 const PRECACHE = [
     './',
     'index.html',
-    'css/style.css?v=6',
-    'css/extra.css?v=6',
-    'css/rules.css?v=4',
-    'css/gallery.css?v=6',
-    'css/herocards.css?v=5',
-    'js/data.js?v=7',
-    'js/gallery-data.js?v=1',
-    'js/data-extra.js?v=7',
-    'js/menu-i18n.js?v=7',
-    'js/app.js?v=9',
-    'js/rules.js?v=4',
-    'js/gallery.js?v=6',
-    'js/boot.js?v=5',
+    'css/style.css',
+    'css/extra.css',
+    'css/rules.css',
+    'css/gallery.css',
+    'css/herocards.css',
+    'css/perf.css',
+    'js/data.js',
+    'js/gallery-data.js',
+    'js/data-extra.js',
+    'js/app.js',
+    'js/rules.js',
+    'js/gallery.js',
+    'js/boot.js',
     'manifest.webmanifest',
     'icons/icon-192.png',
     'icons/icon-512.png',
+    'icons/icon-maskable-512.png',
+    'icons/apple-touch-icon.png',
     'img/hero.jpg',
     'img/hero-portrait.jpg',
+    'img/paren-1.jpg',
+    'img/paren-2.jpg',
+    'img/paren-3.jpg',
+    'img/massage-1.jpg',
+    'img/massage-2.jpg',
+    'img/massage-3.jpg',
+    'img/body-1.jpg',
+    'img/body-2.jpg',
+    'img/body-3.jpg',
+    'img/face-1.jpg',
+    'img/face-2.jpg',
+    'img/face-3.jpg',
+    'img/depil-1.jpg',
+    'img/depil-2.jpg',
+    'img/depil-3.jpg',
+    'img/hair-1.jpg',
+    'img/hair-2.jpg',
+    'img/hair-3.jpg',
+    'img/nails-1.jpg',
+    'img/nails-2.jpg',
+    'img/nails-3.jpg',
 ];
+
+let puts = 0;
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
@@ -47,24 +72,29 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+function fetchFresh(req, signal) {
+    const opts = req.mode === 'navigate' ? { signal } : { signal, cache: 'no-cache' };
+    return fetch(req, opts);
+}
+
 function fetchWithTimeout(req, ms) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), ms);
-    const opts = req.mode === 'navigate' ? { signal: ctrl.signal } : { signal: ctrl.signal, cache: 'no-cache' };
-    return fetch(req, opts).finally(() => clearTimeout(timer));
+    return fetchFresh(req, ctrl.signal).finally(() => clearTimeout(timer));
 }
 
 async function networkFirst(event, req) {
     const cache = await caches.open(CORE);
+    const cached = (await cache.match(req))
+        || (await cache.match(req, { ignoreSearch: true }))
+        || (req.mode === 'navigate' ? (await cache.match('index.html')) || (await cache.match('./')) : undefined);
     try {
-        const res = await fetchWithTimeout(req, NETWORK_TIMEOUT);
+        const res = cached ? await fetchWithTimeout(req, NETWORK_TIMEOUT) : await fetchFresh(req);
         if (res && res.status === 200)
             event.waitUntil(cache.put(req, res.clone()));
         return res;
     } catch (err) {
-        const hit = (await cache.match(req))
-            || (req.mode === 'navigate' ? (await cache.match('index.html')) || (await cache.match('./')) : null);
-        return hit || Response.error();
+        return cached || Response.error();
     }
 }
 
@@ -84,15 +114,35 @@ async function trimCache(cache, limit) {
         await Promise.all(keys.slice(0, keys.length - limit).map((k) => cache.delete(k)));
 }
 
+async function store(cache, req, res) {
+    await cache.put(req, res);
+    puts += 1;
+    if (puts % 25 === 0)
+        await trimCache(cache, MEDIA_LIMIT);
+}
+
+async function cacheFirst(event, req) {
+    const cache = await caches.open(MEDIA);
+    const cached = await cache.match(req, { ignoreVary: true });
+    if (cached)
+        return cached;
+    try {
+        const res = await mediaFetch(req);
+        if (res && res.status === 200)
+            event.waitUntil(store(cache, req, res.clone()));
+        return res;
+    } catch (err) {
+        return Response.error();
+    }
+}
+
 async function staleWhileRevalidate(event, req) {
     const cache = await caches.open(MEDIA);
     const cached = await cache.match(req, { ignoreVary: true });
     const update = mediaFetch(req)
         .then(async (res) => {
-            if (res && res.status === 200) {
-                await cache.put(req, res.clone());
-                await trimCache(cache, MEDIA_LIMIT);
-            }
+            if (res && res.status === 200)
+                await store(cache, req, res.clone());
             return res;
         })
         .catch(() => null);
@@ -109,14 +159,20 @@ self.addEventListener('fetch', (event) => {
         return;
 
     const url = new URL(req.url);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:')
+        return;
+
     const sameOrigin = url.origin === self.location.origin;
     const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
     const isImage = req.destination === 'image';
 
-    if (!sameOrigin && !isFont && !isImage)
+    if (!sameOrigin) {
+        if (isFont || isImage)
+            event.respondWith(cacheFirst(event, req));
         return;
+    }
 
-    if (isFont || isImage) {
+    if (isImage) {
         event.respondWith(staleWhileRevalidate(event, req));
         return;
     }

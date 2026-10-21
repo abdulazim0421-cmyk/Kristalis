@@ -50,6 +50,7 @@
     position: absolute;
     bottom: -12px;
     left: 0;
+    z-index: 1;
     width: 4px;
     height: 4px;
     border-radius: 50%;
@@ -69,7 +70,6 @@
             95vw -30vh 0 1px rgba(255, 210, 140, 0.7);
     will-change: transform, opacity;
     animation: gal-sparks 18s ease-in-out infinite;
-    z-index: 1;
 }
 
 .galx__scroll {
@@ -79,7 +79,7 @@
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    touch-action: pan-y;
+    touch-action: pan-x pan-y;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -392,28 +392,28 @@
     position: relative;
     width: 100%;
     padding-block: calc(var(--ch) * 0.22);
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.gal-row::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 .gal-row.has-active {
     z-index: 5;
 }
 
-.gal-shift {
-    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: transform;
-}
-
 .gal-track {
     display: flex;
     width: max-content;
-    animation: gal-run var(--dur, 60s) linear var(--delay, 0s) infinite;
-    animation-direction: var(--dir, normal);
-    will-change: transform;
-}
-
-.gal-row.is-paused .gal-track {
-    animation-play-state: paused;
 }
 
 .gal-card {
@@ -475,16 +475,6 @@
     to {
         opacity: 1;
         transform: none;
-    }
-}
-
-@keyframes gal-run {
-    from {
-        transform: translate3d(0, 0, 0);
-    }
-
-    to {
-        transform: translate3d(-50%, 0, 0);
     }
 }
 

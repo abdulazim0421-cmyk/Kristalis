@@ -1,0 +1,147 @@
+.hero.has-cards {
+    --hc-gap: 14px;
+    --hc-w: clamp(104px, min(calc((92vw - 2 * var(--hc-gap)) / 3), 21vh), 340px);
+    --hc-h: calc(var(--hc-w) * 0.72);
+    --hc-cols: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: clamp(96px, 12vh, 150px) 0 clamp(20px, 3.5vh, 44px);
+}
+
+.hero.has-cards .hero__content {
+    flex: 0 0 auto;
+    width: min(1240px, 92%);
+    margin-block: auto;
+    margin-inline: auto;
+}
+
+.hero.has-cards .hero__text {
+    margin: clamp(10px, 2vh, 24px) auto clamp(14px, 3vh, 32px);
+}
+
+.hcards {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--hc-gap);
+    width: calc(var(--hc-w) * var(--hc-cols) + var(--hc-gap) * (var(--hc-cols) - 1));
+    max-width: 100%;
+    margin: clamp(12px, 2.4vh, 30px) auto 0;
+}
+
+.hcard {
+    position: relative;
+    flex: 0 0 auto;
+    width: var(--hc-w);
+    height: var(--hc-h);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(240, 194, 122, 0.5);
+    border-radius: 16px;
+    background:
+            radial-gradient(ellipse at 50% 0, rgba(255, 190, 110, 0.35), transparent 62%),
+            linear-gradient(180deg, #5a3519, #1e1209);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    color: var(--cream);
+    text-align: left;
+    cursor: pointer;
+    isolation: isolate;
+    opacity: 0;
+    transform: translateY(18px);
+    animation: hc-in 0.7s var(--d, 0.9s) forwards;
+    transition: transform 0.3s ease, border-color 0.3s;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.hcard:hover {
+    border-color: rgba(240, 194, 122, 0.9);
+}
+
+.hcard:active {
+    transform: scale(0.97);
+}
+
+.hcard__img {
+    position: absolute;
+    inset: 0;
+}
+
+.hcard__img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.hcard::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(14, 8, 4, 0.05) 30%, rgba(14, 8, 4, 0.88) 100%);
+}
+
+.hcard__body {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px 12px;
+}
+
+.hcard__name {
+    font-family: var(--font-head);
+    font-size: clamp(12px, calc(var(--hc-w) * 0.075), 24px);
+    letter-spacing: 0.04em;
+    line-height: 1.15;
+    text-transform: uppercase;
+}
+
+.hcard__count {
+    color: var(--amber);
+    font-size: clamp(9px, calc(var(--hc-w) * 0.034), 12px);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+@keyframes hc-in {
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (orientation: landscape) and (min-width: 900px) {
+    .hero.has-cards {
+        --hc-cols: 5;
+        --hc-w: clamp(110px, min(calc((92vw - 4 * var(--hc-gap)) / 5), 19vh), 300px);
+        padding-top: clamp(104px, 16vh, 160px);
+    }
+}
+
+@media (max-width: 480px) {
+    .hcard__count {
+        display: none;
+    }
+
+    .hcard__body {
+        padding: 8px 9px 9px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hcard {
+        opacity: 1;
+        transform: none;
+    }
+}

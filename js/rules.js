@@ -366,8 +366,8 @@
         if (isOk() || modal.contains(e.target) || modal.classList.contains('is-open'))
             return;
         open();
-        pending = e.target.closest ? e.target.closest('[data-g]') : null;
-    }, true);
+        pending = e.target.closest ? e.target.closest('[data-g], [data-hero-cat]') : null;
+        }, true);
 
     document.addEventListener('click', (e) => {
         if (isOk() || modal.contains(e.target))
@@ -376,8 +376,7 @@
         e.stopPropagation();
         if (!modal.classList.contains('is-open')) {
             open();
-            pending = e.target.closest('[data-g]');
-        }
+            pending = e.target.closest('[data-g], [data-hero-cat]');        }
     }, true);
 
     document.addEventListener('click', (e) => {

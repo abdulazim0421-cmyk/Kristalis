@@ -17,9 +17,11 @@
     const countEl = q('#gal-count');
     const langBox = q('.lang');
     const langBtn = q('.lang__btn');
+    const hero = document.querySelector('.hero');
 
     const SPEEDS = [34, 46, 40];
-    const DIRS = ['normal', 'reverse', 'normal'];
+    const DIRS = [1, -1, 1];
+    const RESUME_MS = 3500;
 
     const lg = () => (UI[root.lang] ? root.lang : 'ru');
     const t = (key) => UI[lg()][key];
@@ -31,6 +33,10 @@
     let sel = null;
     let isOpen = false;
     let closeTimer = 0;
+    let rows = [];
+    let raf = 0;
+    let last = 0;
+    let heroBox = null;
 
     function swap(el) {
         el.classList.remove('is-swap');
@@ -44,6 +50,29 @@
     }
 
     const countText = (cat) => t('galCount').replace('{n}', cat.photos.length);
+
+    function renderHero() {
+        if (!hero)
+            return;
+        if (!heroBox) {
+            heroBox = document.createElement('div');
+            heroBox.className = 'hcards';
+            hero.appendChild(heroBox);
+            hero.classList.add('has-cards');
+            heroBox.addEventListener('error', (e) => {
+                if (e.target.tagName === 'IMG')
+                    e.target.remove();
+            }, true);
+        }
+        heroBox.innerHTML = GALLERY.map((cat, i) => `
+  <button type="button" class="hcard" data-hero-cat="${esc(cat.id)}" style="--d:${(0.9 + i * 0.12).toFixed(2)}s">
+    <span class="hcard__img"><img src="${esc(cat.photos[0])}" alt="" decoding="async"></span>
+    <span class="hcard__body">
+      <span class="hcard__name">${esc(tr(cat.title))}</span>
+      <span class="hcard__count">${esc(countText(cat))}</span>
+    </span>
+  </button>`).join('');
+    }
 
     function renderCats() {
         catsBox.innerHTML = GALLERY.map((cat, i) => `
@@ -90,54 +119,135 @@
         const setW = track.getBoundingClientRect().width || 1;
         const copies = Math.max(1, Math.ceil((row.clientWidth * 2.2) / setW));
         const group = once.repeat(copies);
-        track.innerHTML = group + group;
-        const groupW = track.getBoundingClientRect().width / 2;
-        const dur = Math.max(20, groupW / SPEEDS[r]);
-        row.style.setProperty('--dur', dur.toFixed(1) + 's');
-        row.style.setProperty('--dir', DIRS[r]);
-        row.style.setProperty('--delay', '-' + (Math.random() * dur).toFixed(1) + 's');
+        track.innerHTML = group + group + group;
+        const g = (track.getBoundingClientRect().width / 3) || 1;
+        const pos = g * (0.85 + Math.random() * 0.3);
+        row.scrollLeft = pos;
+        rows.push({
+            row,
+            g,
+            pos,
+            speed: SPEEDS[r],
+            dir: DIRS[r],
+            hold: false,
+            locked: false,
+            resumeAt: 0,
+        });
     }
 
     function renderRows(cat) {
+        stopLoop();
         rowsBox.innerHTML = '';
+        rows = [];
         for (let r = 0; r < 3; r++) {
             const row = document.createElement('div');
             row.className = 'gal-row';
-            row.innerHTML = '<div class="gal-shift"><div class="gal-track"></div></div>';
+            row.innerHTML = '<div class="gal-track"></div>';
             rowsBox.appendChild(row);
             fillRow(row, order(cat.photos, r), r, cat);
         }
+        startLoop();
     }
 
-    function shiftOf(el) {
-        const m = getComputedStyle(el).transform;
-        if (!m || m === 'none')
-            return 0;
-        return new DOMMatrixReadOnly(m).m41;
+    function tick(now) {
+        raf = requestAnimationFrame(tick);
+        const dt = Math.min(0.05, (now - last) / 1000 || 0);
+        last = now;
+        rows.forEach(s => {
+            const el = s.row;
+            const auto = !s.hold && !s.locked && now >= s.resumeAt;
+            if (auto) {
+                s.pos += s.speed * s.dir * dt;
+                el.scrollLeft = s.pos;
+            } else {
+                s.pos = el.scrollLeft;
+            }
+            if (s.locked)
+                return;
+            if (s.pos < s.g * 0.5) {
+                s.pos += s.g;
+                el.scrollLeft = s.pos;
+            } else if (s.pos > s.g * 1.5) {
+                s.pos -= s.g;
+                el.scrollLeft = s.pos;
+            }
+        });
     }
+
+    function startLoop() {
+        if (raf)
+            return;
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+    }
+
+    function stopLoop() {
+        if (raf)
+            cancelAnimationFrame(raf);
+        raf = 0;
+    }
+
+    const stateOf = (row) => rows.find(s => s.row === row);
+
+    rowsBox.addEventListener('touchstart', (e) => {
+        const row = e.target.closest('.gal-row');
+        const s = row && stateOf(row);
+        if (s)
+            s.hold = true;
+    }, { passive: true });
+
+    ['touchend', 'touchcancel'].forEach(name => {
+        rowsBox.addEventListener(name, () => {
+            const now = performance.now();
+            rows.forEach(s => {
+                s.hold = false;
+                s.resumeAt = now + RESUME_MS;
+            });
+        }, { passive: true });
+    });
+
+    rowsBox.addEventListener('wheel', (e) => {
+        const row = e.target.closest('.gal-row');
+        const s = row && stateOf(row);
+        if (s)
+            s.resumeAt = performance.now() + RESUME_MS;
+    }, { passive: true });
+
+    rowsBox.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'mouse')
+            return;
+        const row = e.target.closest('.gal-row');
+        const s = row && stateOf(row);
+        if (s)
+            s.resumeAt = performance.now() + RESUME_MS;
+    });
 
     function release() {
         if (!sel)
             return;
-        const { row, card, shift } = sel;
-        row.classList.remove('is-paused', 'has-active');
+        const { row, card, s } = sel;
+        row.classList.remove('has-active');
         card.classList.remove('is-active');
-        shift.style.transform = '';
+        if (s) {
+            s.locked = false;
+            s.resumeAt = performance.now() + 1500;
+        }
         sel = null;
     }
 
     function select(card) {
         release();
         const row = card.closest('.gal-row');
-        const shift = row.querySelector('.gal-shift');
-        const base = shiftOf(shift);
+        const s = stateOf(row);
         const rr = row.getBoundingClientRect();
         const cr = card.getBoundingClientRect();
-        const dx = base + (rr.left + rr.width / 2) - (cr.left + cr.width / 2);
-        row.classList.add('is-paused', 'has-active');
+        const target = row.scrollLeft + (cr.left - rr.left) + cr.width / 2 - rr.width / 2;
+        if (s)
+            s.locked = true;
+        row.classList.add('has-active');
         card.classList.add('is-active');
-        shift.style.transform = `translate3d(${dx.toFixed(1)}px, 0, 0)`;
-        sel = { row, card, shift };
+        row.scrollTo({ left: target, behavior: 'smooth' });
+        sel = { row, card, s };
     }
 
     function scrollTop() {
@@ -160,6 +270,8 @@
 
     function showHome() {
         release();
+        stopLoop();
+        rows = [];
         current = null;
         rowsBox.innerHTML = '';
         view.hidden = true;
@@ -168,15 +280,20 @@
         scrollTop();
     }
 
-    function openGallery() {
-        if (isOpen)
+    function openGallery(id) {
+        if (isOpen) {
+            if (id)
+                openCat(id);
             return;
+        }
         isOpen = true;
         clearTimeout(closeTimer);
         box.hidden = false;
         box.setAttribute('aria-hidden', 'false');
         root.classList.add('no-scroll');
         showHome();
+        if (id)
+            openCat(id);
         void box.offsetWidth;
         box.classList.add('is-open');
     }
@@ -186,6 +303,7 @@
             return;
         isOpen = false;
         release();
+        stopLoop();
         setLangMenu(false);
         box.classList.remove('is-open');
         root.classList.remove('no-scroll');
@@ -194,11 +312,18 @@
             box.hidden = true;
             box.setAttribute('aria-hidden', 'true');
             rowsBox.innerHTML = '';
+            rows = [];
             current = null;
         }, 320);
     }
 
     document.addEventListener('click', (e) => {
+        const hc = e.target.closest('[data-hero-cat]');
+        if (hc) {
+            e.preventDefault();
+            openGallery(hc.dataset.heroCat);
+            return;
+        }
         const a = e.target.closest('a[href="#gallery"]');
         if (!a)
             return;
@@ -276,6 +401,7 @@
     });
 
     new MutationObserver(() => {
+        renderHero();
         renderCats();
         if (current)
             renderHead();
@@ -303,5 +429,6 @@
         }, 200);
     });
 
+    renderHero();
     renderCats();
 })();
